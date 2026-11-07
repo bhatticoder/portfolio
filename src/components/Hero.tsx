@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useSiteSettings } from "@/lib/useSiteSettings";
 import {
   FileCheck,
   Video,
@@ -35,6 +36,8 @@ const capabilities = [
 ];
 
 export function Hero() {
+  const settings = useSiteSettings();
+
   return (
     <section className="pt-10 pb-16 sm:pt-16 sm:pb-24">
       {/* Top Hero Grid */}
@@ -43,8 +46,8 @@ export function Hero() {
         <div className="lg:hidden flex justify-center">
           <div className="w-48 aspect-[4/5] rounded-2xl overflow-hidden border border-line bg-surface shadow-xs relative">
             <Image
-              src="/profile.jpg"
-              alt="Muhammad Mudassar Bhatti"
+              src={settings.avatarUrl || "/profile.jpg"}
+              alt={settings.name}
               fill
               priority
               sizes="192px"
@@ -139,8 +142,8 @@ export function Hero() {
         <div className="hidden lg:col-span-5 lg:flex flex-col items-center justify-center pl-4">
           <div className="w-full max-w-[340px] aspect-[4/5] rounded-2xl overflow-hidden border border-line bg-surface shadow-sm relative group">
             <Image
-              src="/profile.jpg"
-              alt="Muhammad Mudassar Bhatti"
+              src={settings.avatarUrl || "/profile.jpg"}
+              alt={settings.name}
               fill
               priority
               sizes="340px"
@@ -148,7 +151,7 @@ export function Hero() {
             />
           </div>
           <div className="mt-3 text-center text-xs text-muted font-mono tracking-wide">
-            Muhammad Mudassar Bhatti · Pakistan
+            {settings.name} · {settings.location}
           </div>
         </div>
       </div>

@@ -35,18 +35,23 @@ export interface CaseStudyEngineer {
   diagram: ArchDiagramData;
 }
 
+export interface CaseStudyLinks {
+  github: string | null;
+  demo: string | null;
+  writeup: string | null;
+  video?: string | null;
+}
+
 export interface CaseStudy {
   id: string;
   title: string;
   subtitle: string;
   tag: string;
+  image?: string | null;
+  featured?: boolean;
   plain: CaseStudyPlain;
   engineer: CaseStudyEngineer;
-  links: {
-    github: string | null;
-    demo: string | null;
-    writeup: string | null;
-  };
+  links: CaseStudyLinks;
 }
 
 export const caseStudies: readonly CaseStudy[] = [

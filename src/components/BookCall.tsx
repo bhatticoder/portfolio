@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { ExternalLink } from "lucide-react";
 import { config } from "@/lib/config";
+import { useSiteSettings } from "@/lib/useSiteSettings";
 import { CopyBadge } from "@/components/CopyBadge";
 
 const CalEmbed = dynamic(() => import("@/components/CalEmbed"), {
@@ -18,6 +19,7 @@ const CalEmbed = dynamic(() => import("@/components/CalEmbed"), {
 export function BookCall() {
   const [inView, setInView] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const settings = useSiteSettings();
 
   useEffect(() => {
     const el = containerRef.current;
@@ -98,7 +100,7 @@ export function BookCall() {
 
             <div>
               <a
-                href={`https://cal.com/${config.calLink}`}
+                href={`https://cal.com/${settings.calLink || config.calLink}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 font-sans text-xs border border-line bg-paper px-3 py-2 rounded-lg hover:border-ink/40 text-ink transition-colors"

@@ -1,11 +1,12 @@
 "use client";
 
 import { content } from "@/data/content";
-import { config } from "@/lib/config";
+import { useSiteSettings } from "@/lib/useSiteSettings";
 import { CopyBadge } from "@/components/CopyBadge";
 import { ExternalLink, Terminal } from "lucide-react";
 
 export function Footer() {
+  const settings = useSiteSettings();
   const curlCommand = content.terminal.command;
 
   return (
@@ -32,45 +33,63 @@ export function Footer() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         {/* Left: Copyright */}
         <div className="text-sm text-muted font-sans">
-          © 2026 Muhammad Mudassar Bhatti. Built with Next.js and Tailwind CSS.
+          © 2026 {settings.name}. Built with Next.js and Tailwind CSS.
         </div>
 
         {/* Right: Social & Direct Links */}
         <div className="flex flex-wrap items-center gap-4 text-sm font-sans">
           <div className="flex items-center gap-1.5">
-            <span className="text-ink font-mono text-xs">{config.email}</span>
-            <CopyBadge value={config.email} label="copy" />
+            <span className="text-ink font-mono text-xs">{settings.email}</span>
+            <CopyBadge value={settings.email} label="copy" />
           </div>
 
-          <a
-            href={config.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
-          >
-            <span>GitHub</span>
-            <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-          </a>
+          {settings.socials.github && (
+            <a
+              href={settings.socials.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
+            >
+              <span>GitHub</span>
+              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
+            </a>
+          )}
 
-          <a
-            href={config.linkedin}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
-          >
-            <span>LinkedIn</span>
-            <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-          </a>
+          {settings.socials.linkedin && (
+            <a
+              href={settings.socials.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
+            >
+              <span>LinkedIn</span>
+              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
+            </a>
+          )}
 
-          <a
-            href={config.twitter}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
-          >
-            <span>Twitter/X</span>
-            <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-          </a>
+          {settings.socials.twitter && (
+            <a
+              href={settings.socials.twitter}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
+            >
+              <span>Twitter/X</span>
+              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
+            </a>
+          )}
+
+          {settings.socials.medium && (
+            <a
+              href={settings.socials.medium}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
+            >
+              <span>Medium</span>
+              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
+            </a>
+          )}
         </div>
       </div>
 

@@ -1,8 +1,25 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { CaseStudy } from "@/data/caseStudies";
-import { Lock, Plus, Trash2, Edit3, ExternalLink } from "lucide-react";
+import { SiteSettings, DEFAULT_SETTINGS } from "@/types/settings";
+import { updateCachedSettings } from "@/lib/useSiteSettings";
+import {
+  Lock,
+  Plus,
+  Trash2,
+  Edit3,
+  ExternalLink,
+  Upload,
+  Image as ImageIcon,
+  CheckCircle2,
+  Globe,
+  Settings,
+  FolderGit2,
+  ArrowLeft,
+  X,
+  Share2,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function AdminPage() {
@@ -10,18 +27,33 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>("");
 
+  // Navigation tab: "projects" | "settings"
+  const [activeTab, setActiveTab] = useState<"projects" | "settings">("projects");
+
+  // Projects state
   const [projects, setProjects] = useState<CaseStudy[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [editingProject, setEditingProject] = useState<CaseStudy | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState<boolean>(false);
   const [saveStatus, setSaveStatus] = useState<string>("");
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
 
-  // Form states
+  // Site Settings state
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
+  const [loadingSettings, setLoadingSettings] = useState<boolean>(false);
+  const [settingsStatus, setSettingsStatus] = useState<string>("");
+  const [uploadingAvatar, setUploadingAvatar] = useState<boolean>(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  // Form states for project
   const [formData, setFormData] = useState({
     id: "",
     title: "",
     subtitle: "",
     tag: "",
+    image: "",
     plainProblem: "",
     plainBuilt: "",
     plainOutcome: "",
@@ -32,6 +64,8 @@ export default function AdminPage() {
     metricsKey: "",
     githubLink: "",
     demoLink: "",
+    writeupLink: "",
+    videoLink: "",
   });
 
   const loadProjects = useCallback(async () => {
@@ -49,6 +83,21 @@ export default function AdminPage() {
     }
   }, []);
 
+  const loadSiteSettings = useCallback(async () => {
+    setLoadingSettings(true);
+    try {
+      const res = await fetch("/api/settings", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setSiteSettings(data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSettings(false);
+    }
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
@@ -62,6 +111,7 @@ export default function AdminPage() {
         setIsAuthenticated(true);
         sessionStorage.setItem("bhatti_admin_key", adminKey);
         loadProjects();
+        loadSiteSettings();
       } else {
         setAuthError("Incorrect admin PIN/key. Check .env.local (default: bhatti2026)");
       }
@@ -77,10 +127,73 @@ export default function AdminPage() {
         setAdminKey(saved);
         setIsAuthenticated(true);
         loadProjects();
+        loadSiteSettings();
       }
     }, 0);
     return () => clearTimeout(timer);
-  }, [loadProjects]);
+  }, [loadProjects, loadSiteSettings]);
+
+  // Project Image Upload handler
+  const handleUploadProjectImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const fd = new FormData();
+    fd.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: {
+          "x-admin-key": adminKey,
+        },
+        body: fd,
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setFormData((prev) => ({ ...prev, image: data.url }));
+      } else {
+        alert(data.error || "Image upload failed");
+      }
+    } catch (err) {
+      alert("Upload failed: " + String(err));
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  // Avatar Image Upload handler
+  const handleUploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingAvatar(true);
+    const fd = new FormData();
+    fd.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: {
+          "x-admin-key": adminKey,
+        },
+        body: fd,
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setSiteSettings((prev) => ({ ...prev, avatarUrl: data.url }));
+      } else {
+        alert(data.error || "Avatar upload failed");
+      }
+    } catch (err) {
+      alert("Avatar upload failed: " + String(err));
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
 
   const handleStartCreate = () => {
     setIsCreatingNew(true);
@@ -90,6 +203,7 @@ export default function AdminPage() {
       title: "",
       subtitle: "",
       tag: "",
+      image: "",
       plainProblem: "",
       plainBuilt: "",
       plainOutcome: "",
@@ -100,6 +214,8 @@ export default function AdminPage() {
       metricsKey: "",
       githubLink: "",
       demoLink: "",
+      writeupLink: "",
+      videoLink: "",
     });
   };
 
@@ -111,6 +227,7 @@ export default function AdminPage() {
       title: p.title,
       subtitle: p.subtitle,
       tag: p.tag,
+      image: p.image || "",
       plainProblem: p.plain.problem,
       plainBuilt: p.plain.built,
       plainOutcome: p.plain.outcome,
@@ -123,6 +240,8 @@ export default function AdminPage() {
       metricsKey: p.engineer.metricsKey || p.id,
       githubLink: p.links.github || "",
       demoLink: p.links.demo || "",
+      writeupLink: p.links.writeup || "",
+      videoLink: p.links.video || "",
     });
   };
 
@@ -144,9 +263,9 @@ export default function AdminPage() {
     }
   };
 
-  const handleSaveForm = async (e: React.FormEvent) => {
+  const handleSaveProjectForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaveStatus("Saving...");
+    setSaveStatus("Saving project...");
 
     const parsedHow = formData.engineerHow
       .split("\n")
@@ -172,6 +291,7 @@ export default function AdminPage() {
       title: formData.title.trim(),
       subtitle: formData.subtitle.trim(),
       tag: formData.tag.trim(),
+      image: formData.image.trim() || null,
       plain: {
         problem: formData.plainProblem.trim(),
         built: formData.plainBuilt.trim(),
@@ -199,7 +319,8 @@ export default function AdminPage() {
       links: {
         github: formData.githubLink.trim() || null,
         demo: formData.demoLink.trim() || null,
-        writeup: null,
+        writeup: formData.writeupLink.trim() || null,
+        video: formData.videoLink.trim() || null,
       },
     };
 
@@ -216,59 +337,98 @@ export default function AdminPage() {
 
       if (res.ok) {
         setSaveStatus("Saved successfully!");
-        setEditingProject(null);
+        setTimeout(() => setSaveStatus(""), 2500);
         setIsCreatingNew(false);
+        setEditingProject(null);
         loadProjects();
-        setTimeout(() => setSaveStatus(""), 2000);
       } else {
-        const data = await res.json();
-        setSaveStatus(`Error: ${data.error || "Save failed"}`);
+        const err = await res.json();
+        setSaveStatus("Error: " + (err.error || "Save failed"));
       }
     } catch (err) {
-      setSaveStatus("Error saving: " + String(err));
+      setSaveStatus("Network error: " + String(err));
     }
   };
 
+  const handleSaveSettingsForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSettingsStatus("Saving settings...");
+
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-key": adminKey,
+        },
+        body: JSON.stringify(siteSettings),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.settings) {
+          setSiteSettings(data.settings);
+          updateCachedSettings(data.settings);
+        }
+        setSettingsStatus("Settings & links saved successfully!");
+        setTimeout(() => setSettingsStatus(""), 3000);
+      } else {
+        const err = await res.json();
+        setSettingsStatus("Error: " + (err.error || "Failed to save settings"));
+      }
+    } catch (err) {
+      setSettingsStatus("Network error: " + String(err));
+    }
+  };
+
+  // Auth Screen
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-surface border border-line rounded-2xl p-8 shadow-sm text-center">
-          <div className="w-12 h-12 rounded-xl bg-paper border border-line flex items-center justify-center text-accent mx-auto mb-4">
+      <div className="min-h-screen bg-paper text-ink flex items-center justify-center p-4">
+        <div className="w-full max-w-md border border-line bg-surface p-8 rounded-2xl shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-paper border border-line flex items-center justify-center mb-6 text-accent">
             <Lock className="w-6 h-6" strokeWidth={1.5} />
           </div>
-          <h1 className="font-serif text-3xl text-ink">Bhatti CMS Login</h1>
-          <p className="text-sm text-muted mt-2 font-sans">
-            Manage and publish projects without changing any code or spending AI tokens.
+          <h1 className="font-serif text-3xl text-ink">Bhatti Admin CMS</h1>
+          <p className="mt-2 text-sm text-muted font-sans">
+            Enter your admin PIN / secret key to manage projects, pictures, and social links dynamically.
           </p>
 
-          <form onSubmit={handleLogin} className="mt-6 text-left">
-            <label className="block text-xs font-mono text-muted uppercase tracking-wider mb-2">
-              Admin PIN / Secret
-            </label>
-            <input
-              type="password"
-              value={adminKey}
-              onChange={(e) => setAdminKey(e.target.value)}
-              placeholder="Enter PIN (e.g. bhatti2026)"
-              className="w-full px-4 py-3 bg-paper border border-line rounded-xl text-ink text-sm focus:outline-none focus:border-accent"
-              autoFocus
-            />
+          <form onSubmit={handleLogin} className="mt-6 space-y-4">
+            <div>
+              <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                Admin Secret PIN
+              </label>
+              <input
+                type="password"
+                value={adminKey}
+                onChange={(e) => setAdminKey(e.target.value)}
+                placeholder="bhatti2026"
+                className="w-full px-4 py-2.5 rounded-lg border border-line bg-paper text-ink font-mono text-sm focus:outline-none focus:border-accent"
+                required
+              />
+            </div>
 
             {authError && (
-              <p className="text-xs text-red-500 mt-2 font-sans">{authError}</p>
+              <div className="text-xs text-red-600 font-sans p-2 bg-red-500/10 border border-red-500/20 rounded-md">
+                {authError}
+              </div>
             )}
 
             <button
               type="submit"
-              className="mt-5 w-full h-11 bg-accent text-white font-sans text-sm font-medium rounded-xl hover:opacity-95 transition-opacity cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-accent text-white font-sans text-sm font-medium rounded-lg hover:opacity-95 transition-opacity"
             >
-              Unlock Dashboard
+              Sign In to CMS
             </button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-line text-xs text-muted font-sans">
-            <Link href="/" className="hover:text-ink underline">
-              ← Return to public website
+          <div className="mt-6 pt-6 border-t border-line text-center">
+            <Link
+              href="/"
+              className="text-xs text-muted hover:text-ink font-sans inline-flex items-center gap-1"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Live Portfolio
             </Link>
           </div>
         </div>
@@ -277,349 +437,937 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink pb-20">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-30 h-16 border-b border-line bg-surface/90 backdrop-blur-sm px-4 sm:px-8 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="font-serif text-xl text-ink hover:text-accent transition-colors flex items-center gap-1.5"
-          >
-            <span>Muhammad Mudassar Bhatti</span>
-          </Link>
-          <span className="font-mono text-xs uppercase px-2 py-0.5 rounded-sm bg-accent/10 text-accent font-medium">
-            CMS Admin
-          </span>
+    <div className="min-h-screen bg-paper text-ink">
+      {/* Top Header */}
+      <header className="sticky top-0 z-30 border-b border-line bg-paper/95 backdrop-blur-xs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="font-serif text-xl text-ink hover:text-accent transition-colors"
+            >
+              Muhammad Mudassar Bhatti
+            </Link>
+            <span className="text-xs font-mono px-2 py-0.5 border border-line rounded-md bg-surface text-accent font-medium">
+              CMS Dashboard
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              target="_blank"
+              className="text-xs text-muted hover:text-ink font-sans inline-flex items-center gap-1 px-3 py-1.5 border border-line rounded-lg bg-surface transition-colors"
+            >
+              <span>View Live Site</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem("bhatti_admin_key");
+                setIsAuthenticated(false);
+              }}
+              className="text-xs text-muted hover:text-accent font-sans px-3 py-1.5 border border-line rounded-lg bg-surface transition-colors cursor-pointer"
+            >
+              Log out
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="text-xs font-sans text-muted hover:text-ink flex items-center gap-1"
-          >
-            <span>View Live Site</span>
-            <ExternalLink className="w-3 h-3" strokeWidth={1.5} />
-          </Link>
+        {/* Tab Bar */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex gap-6 border-t border-line/60">
           <button
             type="button"
             onClick={() => {
-              sessionStorage.removeItem("bhatti_admin_key");
-              setIsAuthenticated(false);
+              setActiveTab("projects");
+              setIsCreatingNew(false);
+              setEditingProject(null);
             }}
-            className="text-xs font-sans text-muted hover:text-red-500 transition-colors cursor-pointer"
+            className={`py-3 text-sm font-sans font-medium flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+              activeTab === "projects"
+                ? "border-accent text-accent"
+                : "border-transparent text-muted hover:text-ink"
+            }`}
           >
-            Logout
+            <FolderGit2 className="w-4 h-4" strokeWidth={1.5} />
+            <span>Projects & Screenshots ({projects.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("settings");
+              loadSiteSettings();
+            }}
+            className={`py-3 text-sm font-sans font-medium flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+              activeTab === "settings"
+                ? "border-accent text-accent"
+                : "border-transparent text-muted hover:text-ink"
+            }`}
+          >
+            <Settings className="w-4 h-4" strokeWidth={1.5} />
+            <span>Site Settings & Social Links</span>
           </button>
         </div>
       </header>
 
-      {/* Main CMS Container */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-10">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-line">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        {/* ========================================================================= */}
+        {/* TAB 1: PROJECTS MANAGEMENT */}
+        {/* ========================================================================= */}
+        {activeTab === "projects" && (
           <div>
-            <h1 className="font-serif text-3xl sm:text-4xl text-ink">
-              Project Showcase Management
-            </h1>
-            <p className="mt-1 text-sm text-muted font-sans">
-              Add new client work, edit plain-language summaries, or update engineering details.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleStartCreate}
-            className="inline-flex items-center gap-2 px-5 h-11 bg-accent text-white font-sans text-sm font-medium rounded-xl hover:opacity-95 cursor-pointer shadow-xs shrink-0"
-          >
-            <Plus className="w-4 h-4" strokeWidth={1.5} />
-            <span>Add New Project</span>
-          </button>
-        </div>
-
-        {/* Editor Form Modal / Section */}
-        {(isCreatingNew || editingProject) && (
-          <div className="mt-8 p-6 sm:p-8 bg-surface border border-accent/40 rounded-2xl shadow-md">
-            <div className="flex items-center justify-between pb-4 border-b border-line mb-6">
-              <h2 className="font-serif text-2xl text-ink">
-                {isCreatingNew ? "Create New Project" : `Edit Project: ${formData.title}`}
-              </h2>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCreatingNew(false);
-                  setEditingProject(null);
-                }}
-                className="text-xs font-sans text-muted hover:text-ink cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveForm} className="space-y-6">
-              {/* Identity Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-mono text-muted uppercase tracking-wider mb-1.5">
-                    Project Slug / ID (e.g. docsentry)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    disabled={!isCreatingNew}
-                    value={formData.id}
-                    onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-paper border border-line rounded-lg text-sm text-ink disabled:opacity-60 font-mono"
-                    placeholder="e.g. autonomous-rag"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono text-muted uppercase tracking-wider mb-1.5">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-paper border border-line rounded-lg text-sm text-ink font-sans"
-                    placeholder="e.g. Autonomous RAG Assistant"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono text-muted uppercase tracking-wider mb-1.5">
-                    Tag Line
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.tag}
-                    onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-paper border border-line rounded-lg text-sm text-ink font-mono"
-                    placeholder="agents · retrieval · CI"
-                  />
-                </div>
-              </div>
-
+            {!isCreatingNew && !editingProject ? (
               <div>
-                <label className="block text-xs font-mono text-muted uppercase tracking-wider mb-1.5">
-                  One-Line Subtitle
-                </label>
-                <input
-                  type="text"
-                  value={formData.subtitle}
-                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-paper border border-line rounded-lg text-sm text-ink font-sans"
-                  placeholder="e.g. Autonomous research paper synthesis with local LLMs"
-                />
-              </div>
-
-              {/* Plain English Group */}
-              <div className="p-5 border border-line bg-paper/50 rounded-xl space-y-4">
-                <span className="font-mono text-xs uppercase tracking-wider text-accent font-semibold block">
-                  Plain English Section (For Non-Technical Clients & CEOs)
-                </span>
-
-                <div>
-                  <label className="block text-xs font-sans text-muted mb-1">
-                    Problem (2 plain sentences explaining client bottleneck):
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={formData.plainProblem}
-                    onChange={(e) => setFormData({ ...formData, plainProblem: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-surface border border-line rounded-lg text-sm text-ink font-sans"
-                    placeholder="When software changes, the instructions that describe it quietly go out of date..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-sans text-muted mb-1">
-                    What I built (2 sentences explaining what the system does):
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={formData.plainBuilt}
-                    onChange={(e) => setFormData({ ...formData, plainBuilt: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-surface border border-line rounded-lg text-sm text-ink font-sans"
-                    placeholder="DocSentry watches every code change, finds the documentation affected..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-sans text-muted mb-1">
-                    What you get / Business Outcome (1 sentence):
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.plainOutcome}
-                    onChange={(e) => setFormData({ ...formData, plainOutcome: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-surface border border-line rounded-lg text-sm text-ink font-sans"
-                    placeholder="Documentation that stays correct without someone checking it by hand."
-                  />
-                </div>
-              </div>
-
-              {/* Technical Engineer Group */}
-              <div className="p-5 border border-line bg-paper/50 rounded-xl space-y-4">
-                <span className="font-mono text-xs uppercase tracking-wider text-ink font-semibold block">
-                  Engineer Section (For CTOs & Technical Leads)
-                </span>
-
-                <div>
-                  <label className="block text-xs font-sans text-muted mb-1">
-                    Technical Problem / Constraint:
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={formData.engineerProblem}
-                    onChange={(e) => setFormData({ ...formData, engineerProblem: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-surface border border-line rounded-lg text-sm text-ink font-sans"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Header row */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <div>
-                    <label className="block text-xs font-sans text-muted mb-1">
-                      How It Works (1 bullet per line):
-                    </label>
-                    <textarea
-                      rows={4}
-                      value={formData.engineerHow}
-                      onChange={(e) => setFormData({ ...formData, engineerHow: e.target.value })}
-                      className="w-full px-3.5 py-2 bg-surface border border-line rounded-lg text-sm text-ink font-mono text-xs"
-                      placeholder="Parses git diffs into Tree-sitter ASTs&#10;Retrieves docs with BM25..."
-                    />
+                    <h2 className="font-serif text-3xl text-ink">Project Catalog</h2>
+                    <p className="text-sm text-muted font-sans mt-1">
+                      Manage screenshots, live demos, GitHub repositories, and writeups dynamically.
+                    </p>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-sans text-muted mb-1">
-                      Architectural Trade-offs (Format: Chose | Gave up):
-                    </label>
-                    <textarea
-                      rows={4}
-                      value={formData.engineerTradeoffs}
-                      onChange={(e) => setFormData({ ...formData, engineerTradeoffs: e.target.value })}
-                      className="w-full px-3.5 py-2 bg-surface border border-line rounded-lg text-sm text-ink font-mono text-xs"
-                      placeholder="AST diffing | Needs per-language grammar&#10;Hybrid search | Second index to maintain"
-                    />
-                  </div>
+                  <button
+                    onClick={handleStartCreate}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white font-sans text-sm font-medium rounded-xl hover:opacity-95 transition-opacity shadow-xs cursor-pointer self-start sm:self-auto"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add New Project</span>
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-sans text-muted mb-1">
-                      Stack (comma-separated):
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.engineerStack}
-                      onChange={(e) => setFormData({ ...formData, engineerStack: e.target.value })}
-                      className="w-full px-3.5 py-2 bg-surface border border-line rounded-lg text-sm text-ink font-mono text-xs"
-                      placeholder="Python, FastAPI, ChromaDB, Docker"
-                    />
+                {loading ? (
+                  <div className="text-sm text-muted font-mono p-8 text-center border border-line rounded-xl bg-surface">
+                    Loading projects...
                   </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {projects.map((p) => (
+                      <div
+                        key={p.id}
+                        className="border border-line bg-surface rounded-xl overflow-hidden shadow-xs p-5 flex flex-col justify-between"
+                      >
+                        <div>
+                          {/* Thumbnail Preview */}
+                          <div className="aspect-[16/10] bg-paper border border-line rounded-lg mb-4 overflow-hidden relative flex items-center justify-center">
+                            {p.image ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={p.image}
+                                alt={p.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="text-center p-4">
+                                <ImageIcon className="w-8 h-8 text-muted/50 mx-auto mb-1" />
+                                <span className="font-mono text-xs text-muted">
+                                  No screenshot uploaded
+                                </span>
+                              </div>
+                            )}
+                          </div>
 
-                  <div>
-                    <label className="block text-xs font-sans text-muted mb-1">
-                      GitHub Repo Link (optional):
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.githubLink}
-                      onChange={(e) => setFormData({ ...formData, githubLink: e.target.value })}
-                      className="w-full px-3.5 py-2 bg-surface border border-line rounded-lg text-sm text-ink font-mono text-xs"
-                      placeholder="https://github.com/..."
-                    />
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="text-xs font-mono text-accent uppercase tracking-wider">
+                                {p.tag}
+                              </div>
+                              <h3 className="font-serif text-2xl text-ink mt-1">
+                                {p.title}
+                              </h3>
+                              <p className="text-xs text-muted font-sans mt-1 line-clamp-2">
+                                {p.subtitle}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Links badges */}
+                          <div className="mt-4 pt-3 border-t border-line/60 flex flex-wrap gap-2 text-xs font-mono">
+                            {p.links.demo ? (
+                              <span className="text-emerald-700 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                Demo: {p.links.demo}
+                              </span>
+                            ) : (
+                              <span className="text-muted bg-paper px-2 py-0.5 rounded border border-line">
+                                Demo: NDA
+                              </span>
+                            )}
+
+                            {p.links.github ? (
+                              <span className="text-blue-700 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                                Code: Active
+                              </span>
+                            ) : (
+                              <span className="text-muted bg-paper px-2 py-0.5 rounded border border-line">
+                                Code: NDA
+                              </span>
+                            )}
+
+                            {p.links.writeup && (
+                              <span className="text-purple-700 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                                Writeup
+                              </span>
+                            )}
+
+                            {p.links.video && (
+                              <span className="text-amber-700 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                Video
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Controls */}
+                        <div className="mt-6 pt-4 border-t border-line flex items-center justify-between">
+                          <Link
+                            href={`/work/${p.id}`}
+                            target="_blank"
+                            className="text-xs text-muted hover:text-accent font-sans inline-flex items-center gap-1"
+                          >
+                            <span>Open Page</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </Link>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEdit(p)}
+                              className="px-3 py-1.5 border border-line rounded-lg text-xs font-sans text-ink hover:border-ink/40 bg-paper transition-colors flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(p.id)}
+                              className="px-3 py-1.5 border border-red-200 text-red-600 rounded-lg text-xs font-sans hover:bg-red-500/10 transition-colors flex items-center gap-1.5 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </div>
-
-              {/* Form Buttons */}
-              <div className="flex items-center gap-4">
-                <button
-                  type="submit"
-                  className="px-6 h-11 bg-accent text-white font-sans text-sm font-medium rounded-xl hover:opacity-95 cursor-pointer shadow-xs"
-                >
-                  Save Project to Showcase
-                </button>
-                {saveStatus && (
-                  <span className="text-sm font-sans text-accent font-medium">
-                    {saveStatus}
-                  </span>
                 )}
               </div>
-            </form>
+            ) : (
+              /* Project Form: Add / Edit */
+              <div className="border border-line bg-surface rounded-2xl p-6 sm:p-8 shadow-xs">
+                <div className="flex items-center justify-between pb-6 border-b border-line mb-6">
+                  <div>
+                    <h2 className="font-serif text-3xl text-ink">
+                      {isCreatingNew ? "Add New Project" : `Edit Project: ${formData.title}`}
+                    </h2>
+                    <p className="text-xs text-muted font-mono mt-1">
+                      All changes are dynamic and update immediately across the site.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCreatingNew(false);
+                      setEditingProject(null);
+                    }}
+                    className="p-2 border border-line rounded-lg text-muted hover:text-ink cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveProjectForm} className="space-y-8 font-sans">
+                  {/* Basic Metadata */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Project ID (slug for URL: /work/[id]) *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.id}
+                        onChange={(e) =>
+                          setFormData({ ...formData, id: e.target.value })
+                        }
+                        placeholder="e.g. ai-document-analyzer"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-paper text-ink font-mono text-sm focus:outline-none focus:border-accent"
+                        required
+                        disabled={!isCreatingNew}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Project Title *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.title}
+                        onChange={(e) =>
+                          setFormData({ ...formData, title: e.target.value })
+                        }
+                        placeholder="e.g. DocSentry"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-paper text-ink text-sm focus:outline-none focus:border-accent font-medium"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        One-Line Subtitle / Tagline *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.subtitle}
+                        onChange={(e) =>
+                          setFormData({ ...formData, subtitle: e.target.value })
+                        }
+                        placeholder="e.g. Autonomous documentation-integrity agent"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-paper text-ink text-sm focus:outline-none focus:border-accent"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Category Tag *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.tag}
+                        onChange={(e) =>
+                          setFormData({ ...formData, tag: e.target.value })
+                        }
+                        placeholder="e.g. agents · retrieval · CI"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-paper text-ink text-sm focus:outline-none focus:border-accent"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* SCREENSHOT & PICTURE SECTION */}
+                  <div className="p-5 border border-line rounded-xl bg-paper/60 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-mono text-xs uppercase tracking-wider text-accent font-semibold flex items-center gap-1.5">
+                          <ImageIcon className="w-4 h-4" />
+                          <span>Project Picture / Screenshot (16:10 or 16:9)</span>
+                        </h3>
+                        <p className="text-xs text-muted mt-0.5">
+                          Upload a picture directly or paste any image URL. Leave blank for &quot;Screenshot coming&quot; placeholder.
+                        </p>
+                      </div>
+
+                      {/* Hidden File Input */}
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        onChange={handleUploadProjectImage}
+                        className="hidden"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingImage}
+                        className="px-3.5 py-2 bg-surface border border-line text-xs font-sans font-medium text-ink rounded-lg hover:border-ink/40 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{uploadingImage ? "Uploading..." : "Upload File"}</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-mono text-muted mb-1 uppercase">
+                          Image URL or Path
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.image}
+                          onChange={(e) =>
+                            setFormData({ ...formData, image: e.target.value })
+                          }
+                          placeholder="/uploads/my-screenshot.png or https://..."
+                          className="w-full px-3 py-2 rounded-lg border border-line bg-surface text-ink font-mono text-xs focus:outline-none focus:border-accent"
+                        />
+                      </div>
+
+                      {/* Visual Preview */}
+                      <div className="sm:col-span-1">
+                        <div className="aspect-[16/10] border border-line rounded-lg overflow-hidden bg-surface relative flex items-center justify-center">
+                          {formData.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={formData.image}
+                              alt="Screenshot preview"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="font-mono text-[10px] text-muted text-center px-2">
+                              No image chosen
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ALL PROJECT LINKS SECTION */}
+                  <div className="p-5 border border-line rounded-xl bg-paper/60 space-y-4">
+                    <div>
+                      <h3 className="font-mono text-xs uppercase tracking-wider text-accent font-semibold flex items-center gap-1.5">
+                        <Globe className="w-4 h-4" />
+                        <span>Project Links & Demos</span>
+                      </h3>
+                      <p className="text-xs text-muted mt-0.5">
+                        Leave blank if private or under NDA — the UI will automatically render &quot;On request (NDA)&quot;.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-mono text-muted mb-1 uppercase">
+                          Live Demo URL
+                        </label>
+                        <input
+                          type="url"
+                          value={formData.demoLink}
+                          onChange={(e) =>
+                            setFormData({ ...formData, demoLink: e.target.value })
+                          }
+                          placeholder="https://my-demo-app.com"
+                          className="w-full px-3 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent font-mono text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-mono text-muted mb-1 uppercase">
+                          GitHub Repository URL
+                        </label>
+                        <input
+                          type="url"
+                          value={formData.githubLink}
+                          onChange={(e) =>
+                            setFormData({ ...formData, githubLink: e.target.value })
+                          }
+                          placeholder="https://github.com/bhatticoder/project-repo"
+                          className="w-full px-3 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent font-mono text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-mono text-muted mb-1 uppercase">
+                          Technical Writeup / Docs URL (e.g. Medium, Blog)
+                        </label>
+                        <input
+                          type="url"
+                          value={formData.writeupLink}
+                          onChange={(e) =>
+                            setFormData({ ...formData, writeupLink: e.target.value })
+                          }
+                          placeholder="https://medium.com/@mudasarbhatti784/..."
+                          className="w-full px-3 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent font-mono text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-mono text-muted mb-1 uppercase">
+                          Video Walkthrough / Loom URL
+                        </label>
+                        <input
+                          type="url"
+                          value={formData.videoLink}
+                          onChange={(e) =>
+                            setFormData({ ...formData, videoLink: e.target.value })
+                          }
+                          placeholder="https://loom.com/share/... or YouTube link"
+                          className="w-full px-3 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PLAIN ENGLISH SECTION */}
+                  <div className="border border-line rounded-xl p-5 space-y-4 bg-paper/30">
+                    <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold">
+                      Section A: Plain English (For Non-Technical Clients)
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        The Problem (2 sentences in business terms) *
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={formData.plainProblem}
+                        onChange={(e) =>
+                          setFormData({ ...formData, plainProblem: e.target.value })
+                        }
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent leading-relaxed"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        What I Built (2 sentences in plain language) *
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={formData.plainBuilt}
+                        onChange={(e) =>
+                          setFormData({ ...formData, plainBuilt: e.target.value })
+                        }
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent leading-relaxed"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        What You Get / Outcome (1 sentence client outcome) *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.plainOutcome}
+                        onChange={(e) =>
+                          setFormData({ ...formData, plainOutcome: e.target.value })
+                        }
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* ENGINEER VIEW SECTION */}
+                  <div className="border border-line rounded-xl p-5 space-y-4 bg-paper/30">
+                    <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold">
+                      Section B: Engineer View (For Technical Reviewers)
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Technical Problem Description
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={formData.engineerProblem}
+                        onChange={(e) =>
+                          setFormData({ ...formData, engineerProblem: e.target.value })
+                        }
+                        placeholder="Leave blank to use Plain English problem"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        How It Works (Enter each step / feature on a new line)
+                      </label>
+                      <textarea
+                        rows={4}
+                        value={formData.engineerHow}
+                        onChange={(e) =>
+                          setFormData({ ...formData, engineerHow: e.target.value })
+                        }
+                        placeholder="Parses git diffs into Tree-sitter ASTs&#10;Hybrid retrieval using BM25 and ChromaDB&#10;Multi-model evaluator across Groq and Gemini"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm font-mono text-xs focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Trade-offs (Format each line as: What you chose | What you gave up)
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={formData.engineerTradeoffs}
+                        onChange={(e) =>
+                          setFormData({ ...formData, engineerTradeoffs: e.target.value })
+                        }
+                        placeholder="AST-level diffing over line diffs | Needs grammar per language&#10;Hybrid retrieval over embeddings alone | Extra index maintenance"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm font-mono text-xs focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                          Tech Stack Chips (comma-separated) *
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.engineerStack}
+                          onChange={(e) =>
+                            setFormData({ ...formData, engineerStack: e.target.value })
+                          }
+                          placeholder="Python, FastAPI, Tree-sitter, ChromaDB, Docker"
+                          className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                          Metrics Key (from metrics.ts)
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.metricsKey}
+                          onChange={(e) =>
+                            setFormData({ ...formData, metricsKey: e.target.value })
+                          }
+                          placeholder="e.g. docsentry, radiology-pipeline, edge-cv-anpr"
+                          className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm font-mono text-xs focus:outline-none focus:border-accent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions & Status */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-line">
+                    <div className="text-sm font-mono">
+                      {saveStatus && (
+                        <span
+                          className={
+                            saveStatus.startsWith("Error")
+                              ? "text-red-600"
+                              : "text-emerald-700 font-semibold"
+                          }
+                        >
+                          {saveStatus}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCreatingNew(false);
+                          setEditingProject(null);
+                        }}
+                        className="px-4 py-2 border border-line rounded-xl text-sm font-medium text-ink hover:border-ink/40 bg-paper transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        type="submit"
+                        className="px-6 py-2 bg-accent text-white font-sans text-sm font-medium rounded-xl hover:opacity-95 transition-opacity shadow-xs cursor-pointer flex items-center gap-2"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>{isCreatingNew ? "Publish Project" : "Save Changes"}</span>
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Existing Projects List */}
-        <div className="mt-8 space-y-4">
-          <div className="flex items-center justify-between text-xs font-mono text-muted uppercase tracking-wider mb-2">
-            <span>Active Projects ({projects.length})</span>
-            <span>Status</span>
-          </div>
-
-          {loading ? (
-            <div className="py-12 text-center text-muted font-mono text-sm">
-              Loading projects from storage...
+        {/* ========================================================================= */}
+        {/* TAB 2: SITE SETTINGS & SOCIAL LINKS */}
+        {/* ========================================================================= */}
+        {activeTab === "settings" && (
+          <div className="border border-line bg-surface rounded-2xl p-6 sm:p-8 shadow-xs">
+            <div className="pb-6 border-b border-line mb-6">
+              <h2 className="font-serif text-3xl text-ink">Site Settings & Social Links</h2>
+              <p className="text-sm text-muted font-sans mt-1">
+                Update your contact info, social accounts, Cal.com scheduling slug, and hero profile photo. All changes update instantly on the site.
+              </p>
             </div>
-          ) : projects.length === 0 ? (
-            <div className="py-12 text-center text-muted font-sans text-sm border border-line rounded-xl bg-surface">
-              No projects found. Click &quot;Add New Project&quot; above to publish your first one.
-            </div>
-          ) : (
-            projects.map((p) => (
-              <div
-                key={p.id}
-                className="p-5 bg-surface border border-line rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-line/80 transition-colors"
-              >
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-xs text-muted uppercase">
-                      {p.tag}
-                    </span>
-                    <span className="text-ok font-mono text-xs">· Production</span>
-                  </div>
-                  <h3 className="font-serif text-2xl text-ink">{p.title}</h3>
-                  <p className="text-sm text-muted font-sans mt-0.5 line-clamp-1">
-                    {p.plain.outcome}
-                  </p>
-                </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <Link
-                    href={`/work/${p.id}`}
-                    target="_blank"
-                    className="p-2 border border-line rounded-lg text-xs font-sans text-muted hover:text-ink hover:bg-paper transition-colors"
-                    title="View dedicated page"
-                  >
-                    <ExternalLink className="w-4 h-4" strokeWidth={1.5} />
-                  </Link>
-
-                  <button
-                    type="button"
-                    onClick={() => handleStartEdit(p)}
-                    className="p-2 border border-line rounded-lg text-xs font-sans text-ink hover:bg-paper transition-colors cursor-pointer"
-                    title="Edit project"
-                  >
-                    <Edit3 className="w-4 h-4" strokeWidth={1.5} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(p.id)}
-                    className="p-2 border border-line rounded-lg text-xs font-sans text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors cursor-pointer"
-                    title="Delete project"
-                  >
-                    <Trash2 className="w-4 h-4" strokeWidth={1.5} />
-                  </button>
-                </div>
+            {loadingSettings ? (
+              <div className="text-sm text-muted font-mono p-8 text-center">
+                Loading settings...
               </div>
-            ))
-          )}
-        </div>
+            ) : (
+              <form onSubmit={handleSaveSettingsForm} className="space-y-8 font-sans">
+                {/* Profile Identity & Photo */}
+                <div className="p-5 border border-line rounded-xl bg-paper/50 space-y-4">
+                  <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold">
+                    1. Profile Identity & Photo
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
+                    {/* Avatar Preview */}
+                    <div className="sm:col-span-3 flex flex-col items-center gap-2">
+                      <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-line bg-paper relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={siteSettings.avatarUrl || "/profile.jpg"}
+                          alt={siteSettings.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      {/* Hidden avatar file input */}
+                      <input
+                        type="file"
+                        ref={avatarInputRef}
+                        accept="image/*"
+                        onChange={handleUploadAvatar}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                        className="text-xs text-accent hover:underline font-mono inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span>{uploadingAvatar ? "Uploading..." : "Change Avatar"}</span>
+                      </button>
+                    </div>
+
+                    <div className="sm:col-span-9 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                          Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={siteSettings.name}
+                          onChange={(e) =>
+                            setSiteSettings({ ...siteSettings, name: e.target.value })
+                          }
+                          className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                          Role Title *
+                        </label>
+                        <input
+                          type="text"
+                          value={siteSettings.role}
+                          onChange={(e) =>
+                            setSiteSettings({ ...siteSettings, role: e.target.value })
+                          }
+                          className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                          Location *
+                        </label>
+                        <input
+                          type="text"
+                          value={siteSettings.location}
+                          onChange={(e) =>
+                            setSiteSettings({ ...siteSettings, location: e.target.value })
+                          }
+                          className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact & Scheduling Links */}
+                <div className="p-5 border border-line rounded-xl bg-paper/50 space-y-4">
+                  <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold">
+                    2. Contact & Booking
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Primary Email Address *
+                      </label>
+                      <input
+                        type="email"
+                        value={siteSettings.email}
+                        onChange={(e) =>
+                          setSiteSettings({ ...siteSettings, email: e.target.value })
+                        }
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent font-mono text-xs"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Cal.com Booking Slug *
+                      </label>
+                      <div className="flex items-center">
+                        <span className="px-3 py-2 bg-paper border border-r-0 border-line text-xs font-mono text-muted rounded-l-lg select-none">
+                          cal.com/
+                        </span>
+                        <input
+                          type="text"
+                          value={siteSettings.calLink}
+                          onChange={(e) =>
+                            setSiteSettings({ ...siteSettings, calLink: e.target.value })
+                          }
+                          placeholder="mudasar-bhatti"
+                          className="w-full px-3.5 py-2 rounded-r-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent font-mono text-xs"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Social Profiles & External Links */}
+                <div className="p-5 border border-line rounded-xl bg-paper/50 space-y-4">
+                  <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold flex items-center gap-1.5">
+                    <Share2 className="w-4 h-4" />
+                    <span>3. Social & Developer Links</span>
+                  </div>
+                  <p className="text-xs text-muted">
+                    Update any of these links whenever you change profiles. They immediately power the Nav, Footer, and Command Palette.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        LinkedIn URL
+                      </label>
+                      <input
+                        type="url"
+                        value={siteSettings.socials?.linkedin || ""}
+                        onChange={(e) =>
+                          setSiteSettings({
+                            ...siteSettings,
+                            socials: { ...siteSettings.socials, linkedin: e.target.value },
+                          })
+                        }
+                        placeholder="https://www.linkedin.com/in/mudasarbhatti/"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Twitter / X URL
+                      </label>
+                      <input
+                        type="url"
+                        value={siteSettings.socials?.twitter || ""}
+                        onChange={(e) =>
+                          setSiteSettings({
+                            ...siteSettings,
+                            socials: { ...siteSettings.socials, twitter: e.target.value },
+                          })
+                        }
+                        placeholder="https://x.com/mudasar__1"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        GitHub Profile URL
+                      </label>
+                      <input
+                        type="url"
+                        value={siteSettings.socials?.github || ""}
+                        onChange={(e) =>
+                          setSiteSettings({
+                            ...siteSettings,
+                            socials: { ...siteSettings.socials, github: e.target.value },
+                          })
+                        }
+                        placeholder="https://github.com/bhatticoder"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Medium Profile URL
+                      </label>
+                      <input
+                        type="url"
+                        value={siteSettings.socials?.medium || ""}
+                        onChange={(e) =>
+                          setSiteSettings({
+                            ...siteSettings,
+                            socials: { ...siteSettings.socials, medium: e.target.value },
+                          })
+                        }
+                        placeholder="https://medium.com/@mudasarbhatti784"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Reddit Profile URL
+                      </label>
+                      <input
+                        type="url"
+                        value={siteSettings.socials?.reddit || ""}
+                        onChange={(e) =>
+                          setSiteSettings({
+                            ...siteSettings,
+                            socials: { ...siteSettings.socials, reddit: e.target.value },
+                          })
+                        }
+                        placeholder="https://www.reddit.com/user/AnteaterCultural5966/"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                        Instagram Profile URL
+                      </label>
+                      <input
+                        type="url"
+                        value={siteSettings.socials?.instagram || ""}
+                        onChange={(e) =>
+                          setSiteSettings({
+                            ...siteSettings,
+                            socials: { ...siteSettings.socials, instagram: e.target.value },
+                          })
+                        }
+                        placeholder="https://www.instagram.com/tita_nbyte"
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Button & Feedback */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-line">
+                  <div className="text-sm font-mono">
+                    {settingsStatus && (
+                      <span
+                        className={
+                          settingsStatus.startsWith("Error")
+                            ? "text-red-600"
+                            : "text-emerald-700 font-semibold"
+                        }
+                      >
+                        {settingsStatus}
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 bg-accent text-white font-sans text-sm font-medium rounded-xl hover:opacity-95 transition-opacity shadow-xs cursor-pointer flex items-center gap-2"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Save Site Settings & Links</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
       </main>
     </div>
   );
 }
-

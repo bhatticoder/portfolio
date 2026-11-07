@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Search } from "lucide-react";
 import { config } from "@/lib/config";
+import { useSiteSettings } from "@/lib/useSiteSettings";
 import { content } from "@/data/content";
 
 interface CommandItem {
@@ -27,6 +28,7 @@ export function CommandPalette({
   onOpenCaseStudy,
 }: CommandPaletteProps) {
   const router = useRouter();
+  const settings = useSiteSettings();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [prevQuery, setPrevQuery] = useState(query);
@@ -179,7 +181,7 @@ export function CommandPalette({
         group: "Actions",
         shortcut: "E",
         run: () => {
-          copyToClipboard(config.email);
+          copyToClipboard(settings.email || config.email);
           onClose();
         },
       },
@@ -198,7 +200,7 @@ export function CommandPalette({
         group: "Actions",
         run: () => {
           window.open(
-            `https://cal.com/${config.calLink}`,
+            `https://cal.com/${settings.calLink || config.calLink}`,
             "_blank",
             "noopener,noreferrer"
           );
@@ -220,7 +222,7 @@ export function CommandPalette({
         title: "Open GitHub ↗",
         group: "Actions",
         run: () => {
-          window.open(config.github, "_blank", "noopener,noreferrer");
+          window.open(settings.socials?.github || config.github, "_blank", "noopener,noreferrer");
           onClose();
         },
       },
@@ -229,7 +231,7 @@ export function CommandPalette({
         title: "Open LinkedIn ↗",
         group: "Actions",
         run: () => {
-          window.open(config.linkedin, "_blank", "noopener,noreferrer");
+          window.open(settings.socials?.linkedin || config.linkedin, "_blank", "noopener,noreferrer");
           onClose();
         },
       },
@@ -238,7 +240,16 @@ export function CommandPalette({
         title: "Open Twitter/X ↗",
         group: "Actions",
         run: () => {
-          window.open(config.twitter, "_blank", "noopener,noreferrer");
+          window.open(settings.socials?.twitter || config.twitter, "_blank", "noopener,noreferrer");
+          onClose();
+        },
+      },
+      {
+        id: "act-medium",
+        title: "Open Medium ↗",
+        group: "Actions",
+        run: () => {
+          window.open(settings.socials?.medium || config.medium, "_blank", "noopener,noreferrer");
           onClose();
         },
       },
@@ -250,6 +261,7 @@ export function CommandPalette({
       onClose,
       resolvedTheme,
       setTheme,
+      settings,
     ]
   );
 

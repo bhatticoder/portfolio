@@ -160,16 +160,27 @@ export function CaseStudies({
             >
               <div>
                 {/* Visual Thumbnail (16:10 aspect ratio) */}
-                <div className="relative aspect-[16/10] bg-paper border-b border-line flex flex-col items-center justify-center p-6 text-center select-none overflow-hidden group">
-                  <div className="w-12 h-12 rounded-xl border border-line bg-surface flex items-center justify-center text-muted mb-3 group-hover:scale-105 transition-transform">
-                    <Layers className="w-6 h-6 text-accent" strokeWidth={1.5} />
-                  </div>
-                  <div className="font-serif text-lg text-ink">
-                    {cs.title} Demo Screen
-                  </div>
-                  <span className="mt-1 font-mono text-xs text-muted">
-                    Screenshot coming
-                  </span>
+                <div className="relative aspect-[16/10] bg-paper border-b border-line flex flex-col items-center justify-center text-center select-none overflow-hidden group">
+                  {cs.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={cs.image}
+                      alt={`${cs.title} demo thumbnail`}
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="p-6 flex flex-col items-center justify-center">
+                      <div className="w-12 h-12 rounded-xl border border-line bg-surface flex items-center justify-center text-muted mb-3 group-hover:scale-105 transition-transform">
+                        <Layers className="w-6 h-6 text-accent" strokeWidth={1.5} />
+                      </div>
+                      <div className="font-serif text-lg text-ink">
+                        {cs.title} Demo Screen
+                      </div>
+                      <span className="mt-1 font-mono text-xs text-muted">
+                        Screenshot coming
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Card Content Body */}
@@ -278,16 +289,8 @@ export function CaseStudies({
               </div>
 
               {/* Bottom Actions Row */}
-              <div className="px-6 pb-6 pt-2 sm:px-8 sm:pb-8 flex flex-wrap items-center justify-between gap-3 border-t border-line/40">
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/work/${cs.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-lg text-xs font-medium text-ink hover:border-ink/40 transition-colors"
-                  >
-                    <span>Read case study</span>
-                    <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} />
-                  </Link>
-
+              <div className="px-6 pb-6 pt-3 sm:px-8 sm:pb-8 flex flex-wrap items-center justify-between gap-3 border-t border-line/40">
+                <div className="flex items-center gap-2 flex-wrap">
                   {cs.links.demo ? (
                     <a
                       href={cs.links.demo}
@@ -295,19 +298,73 @@ export function CaseStudies({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-lg text-xs font-medium text-ink hover:border-ink/40 transition-colors"
                     >
-                      <span>Demo</span>
+                      <span>Live demo</span>
                       <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </a>
-                  ) : null}
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-1 text-xs text-muted/70 font-mono">
+                      Live demo: On request (NDA)
+                    </span>
+                  )}
+
+                  {cs.links.github ? (
+                    <a
+                      href={cs.links.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-lg text-xs font-medium text-ink hover:border-ink/40 transition-colors"
+                    >
+                      <span>View code</span>
+                      <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    </a>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-1 text-xs text-muted/70 font-mono">
+                      Code: On request (NDA)
+                    </span>
+                  )}
+
+                  {cs.links.writeup && (
+                    <a
+                      href={cs.links.writeup}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-lg text-xs font-medium text-ink hover:border-ink/40 transition-colors"
+                    >
+                      <span>Writeup</span>
+                      <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    </a>
+                  )}
+
+                  {cs.links.video && (
+                    <a
+                      href={cs.links.video}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-lg text-xs font-medium text-ink hover:border-ink/40 transition-colors"
+                    >
+                      <span>Watch</span>
+                      <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    </a>
+                  )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => openDetails(cs)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-accent hover:underline cursor-pointer"
-                >
-                  <span>Architecture & Specs →</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/work/${cs.id}`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-muted hover:text-ink transition-colors"
+                  >
+                    <span>Page</span>
+                    <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} />
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => openDetails(cs)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-accent hover:underline cursor-pointer"
+                  >
+                    <span>Details</span>
+                  </button>
+                </div>
               </div>
             </article>
           );

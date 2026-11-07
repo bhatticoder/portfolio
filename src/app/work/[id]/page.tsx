@@ -97,8 +97,44 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
                 <span>Code available under NDA / on request</span>
               </span>
             )}
+
+            {project.links.writeup && (
+              <a
+                href={project.links.writeup}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 h-10 bg-surface border border-line text-ink font-sans text-sm font-medium rounded-xl hover:bg-paper transition-colors"
+              >
+                <span>Read Technical Writeup</span>
+                <ExternalLink className="w-4 h-4" strokeWidth={1.5} />
+              </a>
+            )}
+
+            {project.links.video && (
+              <a
+                href={project.links.video}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 h-10 bg-surface border border-line text-ink font-sans text-sm font-medium rounded-xl hover:bg-paper transition-colors"
+              >
+                <span>Watch Video Walkthrough</span>
+                <ExternalLink className="w-4 h-4" strokeWidth={1.5} />
+              </a>
+            )}
           </div>
         </div>
+
+        {/* Project Screenshot / Thumbnail Banner */}
+        {project.image && (
+          <div className="my-8 rounded-2xl overflow-hidden border border-line bg-surface shadow-xs aspect-[16/9] relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={project.image}
+              alt={`${project.title} screenshot`}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
 
         {/* 1. Plain English Executive Summary */}
         <section className="my-10 p-6 sm:p-8 bg-surface border border-line rounded-2xl shadow-xs space-y-6">
