@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const ADMIN_SECRET = process.env.ADMIN_SECRET || "bhatti2026";
+import { verifyAdminPassword } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
     const { key } = await request.json();
-    if (key === ADMIN_SECRET) {
+    if (verifyAdminPassword(key)) {
       return NextResponse.json({ ok: true });
     }
-    return NextResponse.json({ error: "Invalid admin key" }, { status: 401 });
+    return NextResponse.json({ error: "Invalid admin key / PIN" }, { status: 401 });
   } catch {
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSiteSettings, saveSiteSettings } from "@/lib/settingsDb";
-
-const ADMIN_SECRET = process.env.ADMIN_SECRET || "bhatti2026";
+import { verifyAdminPassword } from "@/lib/auth";
 
 function isAuthorized(request: NextRequest): boolean {
   const headerKey = request.headers.get("x-admin-key");
-  return headerKey === ADMIN_SECRET;
+  return verifyAdminPassword(headerKey);
 }
 
 export async function GET(request: NextRequest) {

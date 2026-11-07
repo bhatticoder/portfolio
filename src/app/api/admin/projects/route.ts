@@ -5,14 +5,13 @@ import {
   updateProject,
   deleteProject,
 } from "@/lib/projectsDb";
-
-const ADMIN_SECRET = process.env.ADMIN_SECRET || "bhatti2026";
+import { verifyAdminPassword } from "@/lib/auth";
 
 function isAuthorized(request: NextRequest): boolean {
   const key =
     request.headers.get("x-admin-key") ||
     request.headers.get("authorization")?.replace("Bearer ", "");
-  return key === ADMIN_SECRET;
+  return verifyAdminPassword(key);
 }
 
 export async function GET(request: NextRequest) {

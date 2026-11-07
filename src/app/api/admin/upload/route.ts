@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-
-const ADMIN_SECRET = process.env.ADMIN_SECRET || "bhatti2026";
+import { verifyAdminPassword } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   const adminKey = request.headers.get("x-admin-key");
-  if (adminKey !== ADMIN_SECRET) {
+  if (!verifyAdminPassword(adminKey)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

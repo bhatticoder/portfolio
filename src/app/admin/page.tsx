@@ -19,6 +19,7 @@ import {
   ArrowLeft,
   X,
   Share2,
+  KeyRound,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -27,8 +28,16 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string>("");
 
-  // Navigation tab: "projects" | "settings"
-  const [activeTab, setActiveTab] = useState<"projects" | "settings">("projects");
+  // Navigation tab: "projects" | "settings" | "security"
+  const [activeTab, setActiveTab] = useState<"projects" | "settings" | "security">("projects");
+
+  // Security / Change Password state
+  const [currentPassword, setCurrentPassword] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [securityStatus, setSecurityStatus] = useState<string>("");
+  const [securityError, setSecurityError] = useState<string>("");
+  const [changingPassword, setChangingPassword] = useState<boolean>(false);
 
   // Projects state
   const [projects, setProjects] = useState<CaseStudy[]>([]);
@@ -436,6 +445,53 @@ export default function AdminPage() {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSecurityError("");
+    setSecurityStatus("");
+
+    if (newPassword !== confirmPassword) {
+      setSecurityError("New password and confirm password do not match");
+      return;
+    }
+
+    if (newPassword.trim().length < 4) {
+      setSecurityError("New password must be at least 4 characters long");
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const res = await fetch("/api/admin/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-key": adminKey,
+        },
+        body: JSON.stringify({
+          currentPassword: currentPassword.trim(),
+          newPassword: newPassword.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setAdminKey(newPassword.trim());
+        sessionStorage.setItem("bhatti_admin_key", newPassword.trim());
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setSecurityStatus("Password successfully changed to your custom password!");
+      } else {
+        setSecurityError(data.error || "Failed to update password");
+      }
+    } catch (err) {
+      setSecurityError("Network error: " + String(err));
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   // Auth Screen
   if (!isAuthenticated) {
     return (
@@ -562,6 +618,23 @@ export default function AdminPage() {
           >
             <Settings className="w-4 h-4" strokeWidth={1.5} />
             <span>Site Settings & Social Links</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab("security");
+              setSecurityStatus("");
+              setSecurityError("");
+            }}
+            className={`py-3 text-sm font-sans font-medium flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+              activeTab === "security"
+                ? "border-accent text-accent"
+                : "border-transparent text-muted hover:text-ink"
+            }`}
+          >
+            <KeyRound className="w-4 h-4" strokeWidth={1.5} />
+            <span>Change Password</span>
           </button>
         </div>
       </header>
@@ -1225,6 +1298,38 @@ export default function AdminPage() {
                         />
                       </div>
                     </div>
+
+                    <div className="sm:col-span-12 grid grid-cols-1 gap-4 pt-3 border-t border-line/60">
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                          Hero Headline (Headline on Homepage)
+                        </label>
+                        <input
+                          type="text"
+                          value={siteSettings.headline || ""}
+                          onChange={(e) =>
+                            setSiteSettings({ ...siteSettings, headline: e.target.value })
+                          }
+                          placeholder="I build AI systems that do real work for your business."
+                          className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
+                          Hero Subheadline (Plain Language Description)
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={siteSettings.subheadline || ""}
+                          onChange={(e) =>
+                            setSiteSettings({ ...siteSettings, subheadline: e.target.value })
+                          }
+                          placeholder="Tools that read documents, watch video, check your code, and flag problems automatically..."
+                          className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm focus:outline-none focus:border-accent"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1379,6 +1484,88 @@ export default function AdminPage() {
                 </div>
               </form>
             )}
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 3: SECURITY & CHANGE PASSWORD */}
+        {/* ========================================================================= */}
+        {activeTab === "security" && (
+          <div className="max-w-xl mx-auto border border-line bg-surface rounded-2xl p-6 sm:p-8 shadow-xs">
+            <div className="w-12 h-12 rounded-xl bg-paper border border-line flex items-center justify-center mb-6 text-accent">
+              <KeyRound className="w-6 h-6" strokeWidth={1.5} />
+            </div>
+
+            <h2 className="font-serif text-3xl text-ink">Change Admin Password</h2>
+            <p className="text-sm text-muted font-sans mt-1">
+              Apni marzi ka naya password / PIN set karein. Future me admin login ke liye yahi password use hoga.
+            </p>
+
+            <form onSubmit={handleChangePassword} className="mt-8 space-y-5 font-sans">
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
+                  Current Password *
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password (default: bhatti2026)"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
+                  New Password * (kam az kam 4 characters)
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Apna naya password enter karein"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
+                  Confirm New Password *
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Naya password dobara enter karein"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
+                  required
+                />
+              </div>
+
+              {securityError && (
+                <div className="text-xs text-red-600 font-sans p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                  {securityError}
+                </div>
+              )}
+
+              {securityStatus && (
+                <div className="text-xs text-emerald-700 font-sans p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{securityStatus}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={changingPassword}
+                className="w-full py-2.5 bg-accent text-white font-sans text-sm font-medium rounded-xl hover:opacity-95 transition-opacity shadow-xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4" />
+                <span>{changingPassword ? "Updating Password..." : "Update Password"}</span>
+              </button>
+            </form>
           </div>
         )}
       </main>
