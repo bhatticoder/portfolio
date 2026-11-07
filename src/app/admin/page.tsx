@@ -20,6 +20,8 @@ import {
   X,
   Share2,
   KeyRound,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -38,6 +40,12 @@ export default function AdminPage() {
   const [securityStatus, setSecurityStatus] = useState<string>("");
   const [securityError, setSecurityError] = useState<string>("");
   const [changingPassword, setChangingPassword] = useState<boolean>(false);
+
+  // Password visibility toggles
+  const [showLoginPassword, setShowLoginPassword] = useState<boolean>(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState<boolean>(false);
+  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
 
   // Projects state
   const [projects, setProjects] = useState<CaseStudy[]>([]);
@@ -508,16 +516,30 @@ export default function AdminPage() {
           <form onSubmit={handleLogin} className="mt-6 space-y-4">
             <div>
               <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
-                Admin Secret PIN
+                Admin Password / PIN
               </label>
-              <input
-                type="password"
-                value={adminKey}
-                onChange={(e) => setAdminKey(e.target.value)}
-                placeholder="bhatti2026"
-                className="w-full px-4 py-2.5 rounded-lg border border-line bg-paper text-ink font-mono text-sm focus:outline-none focus:border-accent"
-                required
-              />
+              <div className="relative flex items-center">
+                <input
+                  type={showLoginPassword ? "text" : "password"}
+                  value={adminKey}
+                  onChange={(e) => setAdminKey(e.target.value)}
+                  placeholder="Enter admin password / PIN"
+                  className="w-full pl-4 pr-11 py-2.5 rounded-lg border border-line bg-paper text-ink font-mono text-sm focus:outline-none focus:border-accent"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  className="absolute right-3 p-1 text-muted hover:text-ink transition-colors cursor-pointer"
+                  aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                >
+                  {showLoginPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             {authError && (
@@ -1387,7 +1409,7 @@ export default function AdminPage() {
                         <span>3. Social & Developer Links (Dynamic)</span>
                       </div>
                       <p className="text-xs text-muted mt-0.5">
-                        Jitne mrzi links add karein (LinkedIn, GitHub, YouTube, Discord, Substack, etc.). Yeh footer aur search menu me real-time show honge.
+                        Add as many social or professional profiles as you need (e.g. LinkedIn, GitHub, YouTube, Discord, Substack). They will automatically appear in the footer and command palette.
                       </p>
                     </div>
 
@@ -1498,7 +1520,7 @@ export default function AdminPage() {
 
             <h2 className="font-serif text-3xl text-ink">Change Admin Password</h2>
             <p className="text-sm text-muted font-sans mt-1">
-              Apni marzi ka naya password / PIN set karein. Future me admin login ke liye yahi password use hoga.
+              Set a custom administrative password or PIN for this dashboard. This password will be required for all future admin sessions.
             </p>
 
             <form onSubmit={handleChangePassword} className="mt-8 space-y-5 font-sans">
@@ -1506,42 +1528,84 @@ export default function AdminPage() {
                 <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
                   Current Password *
                 </label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter current password (default: bhatti2026)"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
-                  required
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    placeholder="Enter current password (default: bhatti2026)"
+                    className="w-full pl-3.5 pr-11 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 p-1 text-muted hover:text-ink transition-colors cursor-pointer"
+                    aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
+                  >
+                    {showCurrentPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
-                  New Password * (kam az kam 4 characters)
+                  New Password * (minimum 4 characters)
                 </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Apna naya password enter karein"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
-                  required
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new custom password"
+                    className="w-full pl-3.5 pr-11 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 p-1 text-muted hover:text-ink transition-colors cursor-pointer"
+                    aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
                   Confirm New Password *
                 </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Naya password dobara enter karein"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
-                  required
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new custom password"
+                    className="w-full pl-3.5 pr-11 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 p-1 text-muted hover:text-ink transition-colors cursor-pointer"
+                    aria-label={showConfirmPassword ? "Hide confirmed password" : "Show confirmed password"}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {securityError && (

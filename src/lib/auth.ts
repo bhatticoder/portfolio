@@ -43,3 +43,4 @@ export function setAdminPassword(newPin: string): boolean {
     return false;
   }
 }
+
