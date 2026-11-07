@@ -9,6 +9,7 @@ import {
   Rocket,
   ArrowRight,
   ShieldCheck,
+  FileDown,
 } from "lucide-react";
 import { AvailabilityBadge } from "@/components/AvailabilityBadge";
 
@@ -59,12 +60,25 @@ export function Hero() {
 
         {/* Text Left Column (7 cols on lg) */}
         <div className="lg:col-span-7 flex flex-col items-start text-left">
-          {/* Availability pill with subline */}
-          <div className="flex flex-col gap-1 items-start">
-            <AvailabilityBadge />
-            <span className="text-xs text-muted font-sans ml-1">
-              Overlaps UK and US business hours
-            </span>
+          {/* Availability pill & Resume Quick Download Pill */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col gap-1 items-start">
+              <AvailabilityBadge />
+              <span className="text-xs text-muted font-sans ml-1">
+                Overlaps UK and US business hours
+              </span>
+            </div>
+            <a
+              href={settings.resumeUrl || "/resume.pdf"}
+              target="_blank"
+              rel="noopener noreferrer"
+              download="Muhammad_Mudasar_Bhatti_Resume.pdf"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-accent/40 bg-accent/10 hover:bg-accent/20 text-accent text-xs font-mono transition-colors"
+              title="Download Resume (PDF)"
+            >
+              <FileDown className="w-3.5 h-3.5" />
+              <span>Resume (PDF)</span>
+            </a>
           </div>
 
           {/* H1 (serif, 56 to 64px desktop) */}
@@ -84,13 +98,23 @@ export function Hero() {
             can open.
           </p>
 
-          {/* CTA Buttons */}
+          {/* CTA Buttons - Resume Download Comes First */}
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <a
-              href="#book"
-              className="inline-flex items-center justify-center px-6 h-12 bg-accent text-white font-sans text-base font-medium rounded-xl hover:opacity-95 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-sm"
+              href={settings.resumeUrl || "/resume.pdf"}
+              target="_blank"
+              rel="noopener noreferrer"
+              download="Muhammad_Mudasar_Bhatti_Resume.pdf"
+              className="inline-flex items-center justify-center gap-2 px-6 h-12 bg-accent text-white font-sans text-base font-medium rounded-xl hover:opacity-95 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-sm cursor-pointer"
             >
-              Book a free 30-min call
+              <FileDown className="w-4 h-4" strokeWidth={2} />
+              <span>Download Resume</span>
+            </a>
+            <a
+              href="#book"
+              className="inline-flex items-center justify-center px-6 h-12 bg-surface text-ink font-sans text-base font-medium border border-line rounded-xl hover:bg-paper hover:border-accent hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-xs"
+            >
+              Book a call
             </a>
             <a
               href="#work"

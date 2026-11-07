@@ -11,6 +11,7 @@ export interface SiteSettings {
   email: string;
   calLink: string;
   avatarUrl: string;
+  resumeUrl: string;
   headline: string;
   subheadline: string;
   socials: SocialLink[];
@@ -23,6 +24,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   email: "mudasarbhatti191@gmail.com",
   calLink: "mudasar-bhatti",
   avatarUrl: "/profile.jpg",
+  resumeUrl: "/resume.pdf",
   headline: "I build AI systems that do real work for your business.",
   subheadline:
     "Tools that read documents, watch video, check your code, and flag problems automatically, so your team spends time on decisions instead of repetitive checking.",

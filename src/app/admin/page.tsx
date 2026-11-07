@@ -22,6 +22,7 @@ import {
   KeyRound,
   Eye,
   EyeOff,
+  FileDown,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -60,9 +61,11 @@ export default function AdminPage() {
   const [loadingSettings, setLoadingSettings] = useState<boolean>(false);
   const [settingsStatus, setSettingsStatus] = useState<string>("");
   const [uploadingAvatar, setUploadingAvatar] = useState<boolean>(false);
+  const [uploadingResume, setUploadingResume] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   // Form states for project
   const [formData, setFormData] = useState({
@@ -130,7 +133,7 @@ export default function AdminPage() {
         loadProjects();
         loadSiteSettings();
       } else {
-        setAuthError("Incorrect admin PIN/key. Check .env.local (default: bhatti2026)");
+        setAuthError("Incorrect admin password / PIN. Please try again.");
       }
     } catch {
       setAuthError("Failed to authenticate. Server error.");
@@ -231,6 +234,60 @@ export default function AdminPage() {
     } finally {
       setUploadingAvatar(false);
       if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
+
+  // Resume Upload handler
+  const handleUploadResume = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingResume(true);
+    const fd = new FormData();
+    fd.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        headers: {
+          "x-admin-key": adminKey,
+        },
+        body: fd,
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setSiteSettings((prev) => {
+          const next = { ...prev, resumeUrl: data.url };
+          updateCachedSettings(next);
+          return next;
+        });
+
+        // Persist immediately to settings DB
+        fetch("/api/admin/settings", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminKey,
+          },
+          body: JSON.stringify({ ...siteSettings, resumeUrl: data.url }),
+        })
+          .then((r) => r.json())
+          .then((resData) => {
+            if (resData.settings) {
+              setSiteSettings(resData.settings);
+              updateCachedSettings(resData.settings);
+            }
+          })
+          .catch(() => {});
+        alert("Resume uploaded and updated successfully!");
+      } else {
+        alert(data.error || "Resume upload failed");
+      }
+    } catch (err) {
+      alert("Resume upload failed: " + String(err));
+    } finally {
+      setUploadingResume(false);
+      if (resumeInputRef.current) resumeInputRef.current.value = "";
     }
   };
 
@@ -540,9 +597,6 @@ export default function AdminPage() {
                   )}
                 </button>
               </div>
-              <p className="mt-1.5 text-xs text-muted font-mono">
-                Default: Mudasar@2312 (or bhatti2026)
-              </p>
             </div>
 
             {authError && (
@@ -1358,10 +1412,71 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* 2. Resume / CV Management */}
+                <div className="p-5 border border-line rounded-xl bg-paper/50 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold flex items-center gap-1.5">
+                      <FileDown className="w-4 h-4" />
+                      <span>2. Resume / CV (PDF)</span>
+                    </div>
+                    {siteSettings.resumeUrl && (
+                      <a
+                        href={siteSettings.resumeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-mono text-accent hover:underline inline-flex items-center gap-1"
+                      >
+                        <span>View Current Resume</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-muted font-sans leading-relaxed">
+                    Upload your resume in PDF format or provide a direct download link. In the user portfolio view, the &quot;Download Resume&quot; button appears prominently first.
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                    <div className="sm:col-span-4">
+                      <input
+                        type="file"
+                        ref={resumeInputRef}
+                        accept="application/pdf"
+                        onChange={handleUploadResume}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => resumeInputRef.current?.click()}
+                        disabled={uploadingResume}
+                        className="w-full py-2.5 px-4 rounded-xl border border-line bg-surface hover:bg-paper hover:border-accent text-ink text-sm font-sans font-medium inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                      >
+                        <Upload className="w-4 h-4 text-accent" />
+                        <span>{uploadingResume ? "Uploading..." : "Upload Resume PDF"}</span>
+                      </button>
+                    </div>
+
+                    <div className="sm:col-span-8">
+                      <label className="block text-[11px] font-mono uppercase tracking-wider text-muted mb-1">
+                        Resume URL / Path
+                      </label>
+                      <input
+                        type="text"
+                        value={siteSettings.resumeUrl || ""}
+                        onChange={(e) =>
+                          setSiteSettings({ ...siteSettings, resumeUrl: e.target.value })
+                        }
+                        placeholder="/resume.pdf or https://drive.google.com/..."
+                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-sm font-mono focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Contact & Scheduling Links */}
                 <div className="p-5 border border-line rounded-xl bg-paper/50 space-y-4">
                   <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold">
-                    2. Contact & Booking
+                    3. Contact & Booking
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1409,7 +1524,7 @@ export default function AdminPage() {
                     <div>
                       <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold flex items-center gap-1.5">
                         <Share2 className="w-4 h-4" />
-                        <span>3. Social & Developer Links (Dynamic)</span>
+                        <span>4. Social & Developer Links (Dynamic)</span>
                       </div>
                       <p className="text-xs text-muted mt-0.5">
                         Add as many social or professional profiles as you need (e.g. LinkedIn, GitHub, YouTube, Discord, Substack). They will automatically appear in the footer and command palette.
@@ -1526,27 +1641,6 @@ export default function AdminPage() {
               Set a custom administrative password or PIN for this dashboard. This password will be required for all future admin sessions.
             </p>
 
-            {/* Cloud Storage & Persistence Advisory Card */}
-            <div className="mt-6 p-4 rounded-xl border border-line bg-paper/60 text-xs font-sans text-muted space-y-2">
-              <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold flex items-center gap-1.5">
-                <KeyRound className="w-4 h-4" />
-                <span>Multi-Tier Storage & Vercel Persistence</span>
-              </div>
-              <p className="leading-relaxed">
-                When deployed on Vercel, passwords and CMS updates are stored across serverless memory and temporary storage.
-              </p>
-              <div className="pt-2 border-t border-line/60 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
-                <div className="p-2.5 rounded-lg bg-surface border border-line">
-                  <span className="text-ink font-semibold block mb-0.5">Option 1: Vercel Env Var</span>
-                  Set <code className="text-accent">ADMIN_SECRET</code> in Vercel Project Settings → Environment Variables.
-                </div>
-                <div className="p-2.5 rounded-lg bg-surface border border-line">
-                  <span className="text-ink font-semibold block mb-0.5">Option 2: Git CMS Sync</span>
-                  Add <code className="text-accent">GITHUB_TOKEN</code> in Vercel to auto-commit all CMS edits directly to your repository.
-                </div>
-              </div>
-            </div>
-
             <form onSubmit={handleChangePassword} className="mt-8 space-y-5 font-sans">
               <div>
                 <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
@@ -1557,7 +1651,7 @@ export default function AdminPage() {
                     type={showCurrentPassword ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="Enter current password (e.g. Mudasar@2312 or bhatti2026)"
+                    placeholder="Enter current password"
                     className="w-full pl-3.5 pr-11 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
                     required
                   />
@@ -1585,7 +1679,7 @@ export default function AdminPage() {
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new custom password"
+                    placeholder="Enter new password"
                     className="w-full pl-3.5 pr-11 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
                     required
                   />
@@ -1613,7 +1707,7 @@ export default function AdminPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm new custom password"
+                    placeholder="Confirm new password"
                     className="w-full pl-3.5 pr-11 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
                     required
                   />

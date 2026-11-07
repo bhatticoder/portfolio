@@ -176,6 +176,16 @@ export function CommandPalette({
       },
       // Actions
       {
+        id: "act-download-resume",
+        title: "Download Resume / CV (PDF)",
+        group: "Actions",
+        shortcut: "R",
+        run: () => {
+          window.open(settings.resumeUrl || "/resume.pdf", "_blank");
+          onClose();
+        },
+      },
+      {
         id: "act-copy-email",
         title: "Copy email",
         group: "Actions",

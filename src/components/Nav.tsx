@@ -63,10 +63,31 @@ export function Nav({ onOpenPalette }: NavProps = {}) {
           >
             FAQ
           </Link>
+          <a
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            download="Muhammad_Mudasar_Bhatti_Resume.pdf"
+            className="transition-colors py-1 text-muted hover:text-accent font-medium"
+          >
+            Resume
+          </a>
         </nav>
 
         {/* Right CTA & Controls */}
         <div className="flex items-center gap-3">
+          {/* Resume Download Button */}
+          <a
+            href="/resume.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            download="Muhammad_Mudasar_Bhatti_Resume.pdf"
+            className="hidden sm:inline-flex items-center justify-center px-3.5 h-9 border border-line bg-surface text-ink font-sans text-xs font-medium rounded-lg hover:border-accent hover:text-accent transition-colors"
+            title="Download Resume (PDF)"
+          >
+            Resume
+          </a>
+
           {/* Primary Accent Button */}
           <Link
             href="/book"

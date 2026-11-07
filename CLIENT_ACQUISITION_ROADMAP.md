@@ -149,3 +149,4 @@ When prospective clients (founders, CTOs, agencies, business operators) land on 
 | **Friday** | Engage on 5 relevant threads in `r/SaaS` or `r/SideProject` | Reddit |
 | **Saturday** | Draft or publish 1 technical article | Medium |
 | **Sunday** | Review Cal.com calendar and prepare discovery call notes | Cal.com |
+

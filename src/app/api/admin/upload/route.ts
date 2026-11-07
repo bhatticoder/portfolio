@@ -18,10 +18,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate mime type
-    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"];
+    const validTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "image/svg+xml",
+      "application/pdf",
+    ];
     if (!validTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: "Invalid file type. Please upload a JPG, PNG, WebP, or SVG." },
+        { error: "Invalid file type. Please upload a JPG, PNG, WebP, SVG, or PDF." },
         { status: 400 }
       );
     }
