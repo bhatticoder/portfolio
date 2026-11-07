@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { GlobalPalette } from "@/components/GlobalPalette";
 import { content } from "@/data/content";
 import { config } from "@/lib/config";
 import { skills } from "@/data/skills";
@@ -88,6 +89,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
+          <GlobalPalette />
         </ThemeProvider>
       </body>
     </html>

@@ -1,0 +1,213 @@
+[
+  {
+    "id": "docsentry",
+    "title": "DocSentry",
+    "subtitle": "Autonomous documentation-integrity agent",
+    "tag": "agents · retrieval · CI",
+    "featured": true,
+    "plain": {
+      "problem": "When software changes, the instructions that describe it quietly go out of date, and customers and new hires get confused.",
+      "built": "DocSentry watches every code change, finds the documentation affected, and either reports the mismatch or proposes the fix automatically.",
+      "outcome": "Documentation that stays correct without someone checking it by hand."
+    },
+    "engineer": {
+      "problem": "Code changes faster than the docs that describe it. Reviewers don't catch the drift, and stale docs become support tickets. DocSentry reads each change as structure, finds the docs it affects, and either files a verified issue or proposes the fix.",
+      "how": [
+        "Parses git diffs into Tree-sitter ASTs so changes are reasoned about as functions, signatures and exports, not raw text lines.",
+        "Retrieves candidate documentation with hybrid search: BM25 for exact identifiers and flags, dense embeddings (ChromaDB) for paraphrased descriptions.",
+        "Validates doc-vs-code consistency with a multi-model evaluator across Groq, Gemini and a local Ollama model.",
+        "Opens a GitHub issue or a self-healing fix PR only after the finding has been self-verified.",
+        "Ships an interactive static/React monitoring dashboard for runs, findings and outcomes."
+      ],
+      "tradeoffs": [
+        ["AST-level diffing over line diffs", "Needs a grammar per language; unsupported languages fall back to coarse chunks"],
+        ["Hybrid retrieval over embeddings alone", "A second index to maintain and a score-fusion step to tune"],
+        ["Multiple model providers with a local fallback", "More orchestration code; verdicts need an agreement policy"],
+        ["Self-verification before opening issues", "Extra model calls per finding, traded for fewer false-positive issues"]
+      ],
+      "stack": ["Python", "Tree-sitter", "BM25", "ChromaDB", "Groq", "Gemini", "Ollama", "GitHub Actions", "React"],
+      "metricsKey": "docsentry",
+      "diagram": {
+        "ariaLabel": "DocSentry pipeline: git diff to AST parse, hybrid retrieval, multi-model evaluation, self-verification, then GitHub issue or fix PR and a dashboard.",
+        "nodes": [
+          { "id": "diff", "label": "Git diff", "sub": "PR / push", "x": 20, "y": 30 },
+          { "id": "ast", "label": "Tree-sitter AST", "sub": "symbol-level changes", "x": 200, "y": 30 },
+          { "id": "ret", "label": "Hybrid retrieval", "sub": "BM25 + dense vectors", "x": 380, "y": 30 },
+          { "id": "eval", "label": "Multi-model eval", "sub": "Groq / Gemini / Ollama", "x": 560, "y": 30 },
+          { "id": "ver", "label": "Self-verification", "sub": "re-check before acting", "x": 560, "y": 150 },
+          { "id": "act", "label": "Issue or fix PR", "sub": "GitHub API", "x": 380, "y": 150 },
+          { "id": "dash", "label": "Dashboard", "sub": "React, runs + findings", "x": 200, "y": 150 }
+        ],
+        "edges": [
+          { "from": "diff", "to": "ast" },
+          { "from": "ast", "to": "ret" },
+          { "from": "ret", "to": "eval" },
+          { "from": "eval", "to": "ver" },
+          { "from": "ver", "to": "act" },
+          { "from": "act", "to": "dash" }
+        ]
+      }
+    },
+    "links": {
+      "github": null,
+      "demo": null,
+      "writeup": null
+    }
+  },
+  {
+    "id": "radiology-pipeline",
+    "title": "Radiology & Document Pipeline",
+    "subtitle": "Consensus with a human fallback",
+    "tag": "n8n · multi-LLM · safety",
+    "featured": true,
+    "plain": {
+      "problem": "One AI reading a medical document can be confidently wrong, and in healthcare that is not acceptable.",
+      "built": "Several AI reviewers read the same document independently after private details are removed. If they disagree, a human checks it instead of the system guessing.",
+      "outcome": "Faster document handling with a person always in the loop when it is uncertain."
+    },
+    "engineer": {
+      "problem": "A single LLM reading a clinical document can state something false with full confidence. In this setting, a wrong answer is worse than a slow one. The pipeline treats disagreement as a signal and routes it to a person.",
+      "how": [
+        "Orchestrated in n8n so every node, branch and retry is visible and auditable.",
+        "Redacts PII/PHI before any text reaches a model.",
+        "Runs parallel specialist critique nodes over the same input to surface unsupported claims.",
+        "Computes a consensus score across models; below the strict threshold the case is routed to manual human-in-the-loop triage instead of auto-completing."
+      ],
+      "tradeoffs": [
+        ["Redaction before inference", "Some context is lost, which can reduce model accuracy on edge cases"],
+        ["Multiple critics in parallel", "Higher cost and token usage per document"],
+        ["Strict consensus threshold", "More cases land in the human queue; throughput is tuned against safety"],
+        ["n8n orchestration", "Less flexible than custom code for complex branching, in exchange for visibility"]
+      ],
+      "stack": ["n8n", "Multi-LLM APIs", "PII/PHI redaction", "Prompt engineering", "Human-in-the-loop"],
+      "metricsKey": "radiology",
+      "diagram": {
+        "ariaLabel": "Radiology pipeline: intake, PII/PHI redaction, three parallel specialist critics, a consensus gate that either releases a structured report or routes to human triage.",
+        "nodes": [
+          { "id": "in", "label": "Intake", "sub": "document / report", "x": 20, "y": 90 },
+          { "id": "red", "label": "PII/PHI redaction", "sub": "before any model call", "x": 200, "y": 90 },
+          { "id": "c1", "label": "Critic A", "sub": "specialist prompt", "x": 380, "y": 10 },
+          { "id": "c2", "label": "Critic B", "sub": "specialist prompt", "x": 380, "y": 90 },
+          { "id": "c3", "label": "Critic C", "sub": "specialist prompt", "x": 380, "y": 170 },
+          { "id": "gate", "label": "Consensus gate", "sub": "strict threshold", "x": 560, "y": 90 },
+          { "id": "rep", "label": "Structured report", "sub": "consensus met", "x": 560, "y": 10 },
+          { "id": "hitl", "label": "Human triage", "sub": "consensus below threshold", "x": 560, "y": 170 }
+        ],
+        "edges": [
+          { "from": "in", "to": "red" },
+          { "from": "red", "to": "c1" },
+          { "from": "red", "to": "c2" },
+          { "from": "red", "to": "c3" },
+          { "from": "c1", "to": "gate" },
+          { "from": "c2", "to": "gate" },
+          { "from": "c3", "to": "gate" },
+          { "from": "gate", "to": "rep", "label": "pass" },
+          { "from": "gate", "to": "hitl", "label": "fail" }
+        ]
+      }
+    },
+    "links": {
+      "github": null,
+      "demo": null,
+      "writeup": null
+    }
+  },
+  {
+    "id": "edge-cv-anpr",
+    "title": "Real-Time Vehicle & Plate Recognition",
+    "subtitle": "ANPR and multi-object tracking",
+    "tag": "pytorch · yolov8 · latency",
+    "featured": true,
+    "plain": {
+      "problem": "Reading number plates from live video on modest hardware is slow if you process every single frame.",
+      "built": "The system follows each vehicle through the video and reads its plate once, skipping frames that add nothing, then corrects typical misreads.",
+      "outcome": "Plate recognition that keeps up with live video on limited hardware."
+    },
+    "engineer": {
+      "problem": "Reading plates from a live video stream on constrained hardware means you cannot run every model on every frame. The pipeline spends compute only where it changes the answer.",
+      "how": [
+        "YOLOv8 localizes vehicles and plates on the incoming stream.",
+        "SORT / ByteTrack assigns persistent track IDs so each vehicle is read as one entity, not once per frame.",
+        "EasyOCR reads the plate crop; custom regex and character-correction post-processing fixes common confusions (for example 0/O, 1/I, 5/S) against the expected plate format.",
+        "Frame-skipping heuristics cap per-frame cost for latency-constrained environments."
+      ],
+      "tradeoffs": [
+        ["Frame skipping", "Fast-moving vehicles may be sampled less often; tuned per camera"],
+        ["Tracking before OCR", "Added tracker state, in exchange for OCR once per vehicle and consistent IDs"],
+        ["Rule-based correction after OCR", "Rules are tied to a plate format and need per-region maintenance"],
+        ["Off-the-shelf OCR (EasyOCR)", "Lower ceiling than a plate-specific trained model, much faster to deploy"]
+      ],
+      "stack": ["PyTorch", "YOLOv8", "OpenCV", "ByteTrack / SORT", "EasyOCR", "Python"],
+      "metricsKey": "anpr",
+      "diagram": {
+        "ariaLabel": "ANPR pipeline: video stream, frame skipper, YOLOv8 detection, tracker, OCR, character correction and per-track plate output.",
+        "nodes": [
+          { "id": "vid", "label": "Video stream", "sub": "RTSP / file", "x": 20, "y": 30 },
+          { "id": "skip", "label": "Frame skipper", "sub": "latency heuristics", "x": 200, "y": 30 },
+          { "id": "yolo", "label": "YOLOv8", "sub": "vehicle + plate boxes", "x": 380, "y": 30 },
+          { "id": "trk", "label": "SORT / ByteTrack", "sub": "persistent track IDs", "x": 560, "y": 30 },
+          { "id": "ocr", "label": "EasyOCR", "sub": "plate crop to text", "x": 560, "y": 150 },
+          { "id": "fix", "label": "Char correction", "sub": "regex + format rules", "x": 380, "y": 150 },
+          { "id": "out", "label": "Plate per track", "sub": "final read", "x": 200, "y": 150 }
+        ],
+        "edges": [
+          { "from": "vid", "to": "skip" },
+          { "from": "skip", "to": "yolo" },
+          { "from": "yolo", "to": "trk" },
+          { "from": "trk", "to": "ocr" },
+          { "from": "ocr", "to": "fix" },
+          { "from": "fix", "to": "out" }
+        ]
+      }
+    },
+    "links": {
+      "github": null,
+      "demo": null,
+      "writeup": null
+    }
+  },
+  {
+    "id": "pocketdesk",
+    "title": "PocketDesk",
+    "subtitle": "Browser-based desktop streamer",
+    "tag": "c# · win32 · websockets",
+    "featured": true,
+    "plain": {
+      "problem": "Remote access to a Windows computer normally means installing software on every device.",
+      "built": "PocketDesk streams the desktop straight into a web browser, so nothing needs to be installed on the viewing side.",
+      "outcome": "Open a link, see the desktop."
+    },
+    "engineer": {
+      "problem": "Remote desktop usually means installing a client on the viewing side. PocketDesk streams a Windows desktop to any browser with nothing to install on the viewer's machine.",
+      "how": [
+        "A C# host captures the screen through Win32 GDI.",
+        "A Node.js service relays frames over WebSockets.",
+        "The browser is the entire client: zero install on the viewing side."
+      ],
+      "tradeoffs": [
+        ["Win32 GDI capture", "Simple and widely compatible, but not the lowest-overhead capture path available on Windows"],
+        ["WebSockets over WebRTC", "Simpler to deploy and debug, without WebRTC's adaptive transport"],
+        ["Browser-only client", "Limited to what the browser can render and send"]
+      ],
+      "stack": ["C#", "Win32 GDI", "Node.js", "WebSockets"],
+      "metricsKey": "pocketdesk",
+      "diagram": {
+        "ariaLabel": "PocketDesk: a C# Win32 GDI capture host streams to a Node.js WebSocket relay, which serves a browser viewer.",
+        "nodes": [
+          { "id": "cap", "label": "Capture host", "sub": "C# · Win32 GDI", "x": 40, "y": 80, "w": 190 },
+          { "id": "rel", "label": "WebSocket relay", "sub": "Node.js", "x": 265, "y": 80, "w": 190 },
+          { "id": "br", "label": "Browser viewer", "sub": "zero install", "x": 490, "y": 80, "w": 190 }
+        ],
+        "edges": [
+          { "from": "cap", "to": "rel", "label": "frames" },
+          { "from": "rel", "to": "br", "label": "WebSocket" }
+        ]
+      }
+    },
+    "links": {
+      "github": null,
+      "demo": null,
+      "writeup": null
+    }
+  }
+]

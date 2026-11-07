@@ -11,10 +11,8 @@ import { SkillsMatrix } from "@/components/SkillsMatrix";
 import { WorkingTerms } from "@/components/WorkingTerms";
 import { BookCall } from "@/components/BookCall";
 import { Footer } from "@/components/Footer";
-import { CommandPalette } from "@/components/CommandPalette";
 
 export default function Home() {
-  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [selectedCaseStudyId, setSelectedCaseStudyId] = useState<string | undefined>(undefined);
   const { resolvedTheme, setTheme } = useTheme();
   const gPressedRef = useRef(false);
@@ -63,13 +61,13 @@ export default function Home() {
       // Cmd+K / Ctrl+K
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setIsPaletteOpen((prev) => !prev);
+        window.dispatchEvent(new CustomEvent("open-command-palette"));
         return;
       }
 
       if (e.key === "?") {
         e.preventDefault();
-        setIsPaletteOpen(true);
+        window.dispatchEvent(new CustomEvent("open-command-palette"));
         return;
       }
 
@@ -136,7 +134,7 @@ export default function Home() {
       </a>
 
       {/* Navigation */}
-      <Nav onOpenPalette={() => setIsPaletteOpen(true)} />
+      <Nav />
 
       {/* Main Content */}
       <main id="main-content" className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -164,16 +162,6 @@ export default function Home() {
         {/* 07: Footer with Easter Egg Terminal Snippet */}
         <Footer />
       </main>
-
-      {/* Command Palette */}
-      <CommandPalette
-        isOpen={isPaletteOpen}
-        onClose={() => setIsPaletteOpen(false)}
-        onOpenCaseStudy={(id) => {
-          setSelectedCaseStudyId(id);
-          scrollTo("work");
-        }}
-      />
     </div>
   );
 }

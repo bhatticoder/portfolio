@@ -1,0 +1,120 @@
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getAllProjects,
+  createProject,
+  updateProject,
+  deleteProject,
+} from "@/lib/projectsDb";
+
+const ADMIN_SECRET = process.env.ADMIN_SECRET || "bhatti2026";
+
+function isAuthorized(request: NextRequest): boolean {
+  const key =
+    request.headers.get("x-admin-key") ||
+    request.headers.get("authorization")?.replace("Bearer ", "");
+  return key === ADMIN_SECRET;
+}
+
+export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const projects = getAllProjects();
+  return NextResponse.json(projects);
+}
+
+export async function POST(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    if (!body.id || !body.title) {
+      return NextResponse.json(
+        { error: "id and title are required" },
+        { status: 400 }
+      );
+    }
+
+    const success = createProject(body);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Project with this ID already exists or failed to save" },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json({ success: true, project: body });
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Failed to parse or create project", details: String(err) },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { id, ...data } = body;
+    if (!id) {
+      return NextResponse.json(
+        { error: "id is required for update" },
+        { status: 400 }
+      );
+    }
+
+    const success = updateProject(id, data);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Project not found or failed to update" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Failed to update project", details: String(err) },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { error: "id parameter is required" },
+        { status: 400 }
+      );
+    }
+
+    const success = deleteProject(id);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Project not found or could not be deleted" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Failed to delete project", details: String(err) },
+      { status: 500 }
+    );
+  }
+}
+

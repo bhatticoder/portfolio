@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { caseStudies, CaseStudy } from "@/data/caseStudies";
 import { metrics } from "@/data/metrics";
 import { ArchDiagram } from "@/components/ArchDiagram";
-import { ExternalLink, X, Layers } from "lucide-react";
+import { ExternalLink, X, Layers, ArrowRight } from "lucide-react";
 
 interface CaseStudiesProps {
+  initialProjects?: CaseStudy[];
   selectedId?: string;
   onSelectId?: (id: string) => void;
+  limit?: number;
 }
 
 function subscribeStorage(callback: () => void) {
@@ -26,21 +29,45 @@ function getStoredViewMode(): "plain" | "engineer" {
   return "plain";
 }
 
-export function CaseStudies({ selectedId, onSelectId }: CaseStudiesProps) {
+export function CaseStudies({
+  initialProjects,
+  selectedId,
+  onSelectId,
+  limit,
+}: CaseStudiesProps) {
   const persistedMode = useSyncExternalStore<"plain" | "engineer">(
     subscribeStorage,
     getStoredViewMode,
     () => "plain"
   );
   const [viewMode, setViewMode] = useState<"plain" | "engineer">(persistedMode);
+  const [projectsList, setProjectsList] = useState<CaseStudy[]>(
+    initialProjects || (caseStudies as unknown as CaseStudy[])
+  );
   const [detailStudy, setDetailStudy] = useState<CaseStudy | null>(null);
   const [prevSelectedId, setPrevSelectedId] = useState(selectedId);
+
+  // Dynamically load freshest projects from DB
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/projects", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setProjectsList(data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Sync external selection during render
   if (selectedId !== prevSelectedId) {
     setPrevSelectedId(selectedId);
     if (selectedId) {
-      const match = caseStudies.find((c) => c.id === selectedId);
+      const match = projectsList.find((c) => c.id === selectedId);
       if (match) {
         setDetailStudy(match);
       }
@@ -74,6 +101,10 @@ export function CaseStudies({ selectedId, onSelectId }: CaseStudiesProps) {
     },
     [onSelectId]
   );
+
+  const displayedProjects = limit
+    ? projectsList.slice(0, limit)
+    : projectsList;
 
   return (
     <div id="work" className="space-y-8">
@@ -121,7 +152,7 @@ export function CaseStudies({ selectedId, onSelectId }: CaseStudiesProps) {
 
       {/* 2x2 Grid of Large Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {caseStudies.map((cs) => {
+        {displayedProjects.map((cs) => {
           return (
             <article
               key={cs.id}
@@ -155,9 +186,11 @@ export function CaseStudies({ selectedId, onSelectId }: CaseStudiesProps) {
                   </div>
 
                   {/* Title & Subtitle */}
-                  <h3 className="font-serif text-2xl sm:text-[28px] text-ink tracking-tight">
-                    {cs.title}
-                  </h3>
+                  <Link href={`/work/${cs.id}`} className="group">
+                    <h3 className="font-serif text-2xl sm:text-[28px] text-ink tracking-tight group-hover:text-accent transition-colors">
+                      {cs.title}
+                    </h3>
+                  </Link>
                   <p className="mt-1 text-sm text-muted font-sans line-clamp-1">
                     {cs.subtitle}
                   </p>
@@ -247,6 +280,14 @@ export function CaseStudies({ selectedId, onSelectId }: CaseStudiesProps) {
               {/* Bottom Actions Row */}
               <div className="px-6 pb-6 pt-2 sm:px-8 sm:pb-8 flex flex-wrap items-center justify-between gap-3 border-t border-line/40">
                 <div className="flex items-center gap-2">
+                  <Link
+                    href={`/work/${cs.id}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-lg text-xs font-medium text-ink hover:border-ink/40 transition-colors"
+                  >
+                    <span>Read case study</span>
+                    <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} />
+                  </Link>
+
                   {cs.links.demo ? (
                     <a
                       href={cs.links.demo}
@@ -254,23 +295,7 @@ export function CaseStudies({ selectedId, onSelectId }: CaseStudiesProps) {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-lg text-xs font-medium text-ink hover:border-ink/40 transition-colors"
                     >
-                      <span>Live demo</span>
-                      <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-                    </a>
-                  ) : (
-                    <span className="text-xs text-muted/60 px-3 py-1.5 border border-line/40 rounded-lg select-none cursor-not-allowed">
-                      On request (NDA)
-                    </span>
-                  )}
-
-                  {cs.links.github ? (
-                    <a
-                      href={cs.links.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-lg text-xs font-medium text-ink hover:border-ink/40 transition-colors"
-                    >
-                      <span>View code</span>
+                      <span>Demo</span>
                       <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
                     </a>
                   ) : null}
@@ -281,13 +306,26 @@ export function CaseStudies({ selectedId, onSelectId }: CaseStudiesProps) {
                   onClick={() => openDetails(cs)}
                   className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-accent hover:underline cursor-pointer"
                 >
-                  <span>Details & Architecture →</span>
+                  <span>Architecture & Specs →</span>
                 </button>
               </div>
             </article>
           );
         })}
       </div>
+
+      {/* Link to see all projects if limit was set */}
+      {limit && projectsList.length > limit && (
+        <div className="pt-8 text-center border-t border-line/50">
+          <Link
+            href="/work"
+            className="inline-flex items-center gap-2 px-6 h-12 bg-surface border border-line rounded-xl text-sm font-medium text-ink hover:bg-paper hover:border-accent/40 transition-all shadow-xs"
+          >
+            <span>Explore All {projectsList.length} Projects & Systems</span>
+            <ArrowRight className="w-4 h-4 text-accent" strokeWidth={1.5} />
+          </Link>
+        </div>
+      )}
 
       {/* Side Slide-Over Modal for Full Engineer Details */}
       {detailStudy && (
@@ -436,9 +474,12 @@ export function CaseStudies({ selectedId, onSelectId }: CaseStudiesProps) {
 
             {/* Bottom Modal CTA */}
             <div className="pt-6 mt-8 border-t border-line flex items-center justify-between">
-              <span className="text-xs text-muted font-mono">
-                Full code & benchmarks available under NDA
-              </span>
+              <Link
+                href={`/work/${detailStudy.id}`}
+                className="text-xs text-accent hover:underline font-sans font-medium"
+              >
+                Open dedicated page ↗
+              </Link>
               <button
                 type="button"
                 onClick={() => setDetailStudy(null)}

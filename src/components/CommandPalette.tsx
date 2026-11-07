@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Search } from "lucide-react";
 import { config } from "@/lib/config";
@@ -25,6 +26,7 @@ export function CommandPalette({
   onClose,
   onOpenCaseStudy,
 }: CommandPaletteProps) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [prevQuery, setPrevQuery] = useState(query);
@@ -50,16 +52,11 @@ export function CommandPalette({
   }
 
   const navigateTo = useCallback(
-    (hash: string) => {
+    (path: string) => {
       onClose();
-      const el = document.querySelector(hash);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-      } else {
-        window.location.hash = hash;
-      }
+      router.push(path);
     },
-    [onClose]
+    [onClose, router]
   );
 
   const selectCaseStudy = useCallback(
@@ -68,12 +65,9 @@ export function CommandPalette({
       if (onOpenCaseStudy) {
         onOpenCaseStudy(id);
       }
-      const el = document.getElementById("work");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-      }
+      router.push(`/work/${id}`);
     },
-    [onClose, onOpenCaseStudy]
+    [onClose, onOpenCaseStudy, router]
   );
 
   const copyToClipboard = useCallback(async (text: string) => {
@@ -101,38 +95,53 @@ export function CommandPalette({
     () => [
       // Navigate
       {
+        id: "nav-home",
+        title: "Home",
+        group: "Navigate",
+        shortcut: "G H",
+        run: () => navigateTo("/"),
+      },
+      {
         id: "nav-work",
-        title: "Selected Work",
+        title: "Selected Work (Case Studies)",
         group: "Navigate",
         shortcut: "G W",
-        run: () => navigateTo("#work"),
+        run: () => navigateTo("/work"),
       },
       {
         id: "nav-process",
-        title: "How I work (Process)",
+        title: "How I work (Process & Parameters)",
         group: "Navigate",
         shortcut: "G P",
-        run: () => navigateTo("#process"),
+        run: () => navigateTo("/process"),
       },
       {
         id: "nav-skills",
-        title: "What I work with",
+        title: "What I work with (Tech Stack)",
         group: "Navigate",
-        run: () => navigateTo("#skills"),
+        shortcut: "G S",
+        run: () => navigateTo("/stack"),
       },
       {
         id: "nav-faq",
         title: "Terms & FAQ",
         group: "Navigate",
         shortcut: "G F",
-        run: () => navigateTo("#faq"),
+        run: () => navigateTo("/faq"),
       },
       {
         id: "nav-book",
         title: "Book a scoping call",
         group: "Navigate",
         shortcut: "G B",
-        run: () => navigateTo("#book"),
+        run: () => navigateTo("/book"),
+      },
+      {
+        id: "nav-admin",
+        title: "Admin CMS Dashboard",
+        group: "Navigate",
+        shortcut: "A",
+        run: () => navigateTo("/admin"),
       },
       // Case Studies
       {
