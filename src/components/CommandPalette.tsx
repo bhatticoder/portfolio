@@ -1,0 +1,363 @@
+"use client";
+
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useTheme } from "next-themes";
+import { Search } from "lucide-react";
+import { config } from "@/lib/config";
+import { content } from "@/data/content";
+
+interface CommandItem {
+  id: string;
+  title: string;
+  group: "Navigate" | "Case studies" | "Actions";
+  shortcut?: string;
+  run: () => void;
+}
+
+interface CommandPaletteProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onOpenCaseStudy?: (id: string) => void;
+}
+
+export function CommandPalette({
+  isOpen,
+  onClose,
+  onOpenCaseStudy,
+}: CommandPaletteProps) {
+  const [query, setQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [prevQuery, setPrevQuery] = useState(query);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+  const { resolvedTheme, setTheme } = useTheme();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sync state during render when query changes
+  if (query !== prevQuery) {
+    setPrevQuery(query);
+    setSelectedIndex(0);
+  }
+
+  // Sync state during render when isOpen changes
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setQuery("");
+      setSelectedIndex(0);
+    }
+  }
+
+  const navigateTo = useCallback(
+    (hash: string) => {
+      onClose();
+      const el = document.querySelector(hash);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      } else {
+        window.location.hash = hash;
+      }
+    },
+    [onClose]
+  );
+
+  const selectCaseStudy = useCallback(
+    (id: string) => {
+      onClose();
+      if (onOpenCaseStudy) {
+        onOpenCaseStudy(id);
+      }
+      const el = document.getElementById("case-studies");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      }
+      history.replaceState(null, "", `#case-studies/${id}`);
+    },
+    [onClose, onOpenCaseStudy]
+  );
+
+  const copyToClipboard = useCallback(async (text: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const commands: CommandItem[] = useMemo(
+    () => [
+      // Navigate
+      {
+        id: "nav-cases",
+        title: "Case studies",
+        group: "Navigate",
+        shortcut: "G C",
+        run: () => navigateTo("#case-studies"),
+      },
+      {
+        id: "nav-demos",
+        title: "Demos",
+        group: "Navigate",
+        run: () => navigateTo("#demos"),
+      },
+      {
+        id: "nav-stack",
+        title: "Stack",
+        group: "Navigate",
+        shortcut: "G S",
+        run: () => navigateTo("#stack"),
+      },
+      {
+        id: "nav-terms",
+        title: "Working terms",
+        group: "Navigate",
+        shortcut: "G T",
+        run: () => navigateTo("#terms"),
+      },
+      {
+        id: "nav-book",
+        title: "Book a scoping call",
+        group: "Navigate",
+        shortcut: "G B",
+        run: () => navigateTo("#book"),
+      },
+      // Case Studies
+      {
+        id: "cs-docsentry",
+        title: "Open DocSentry",
+        group: "Case studies",
+        shortcut: "1",
+        run: () => selectCaseStudy("docsentry"),
+      },
+      {
+        id: "cs-radiology",
+        title: "Open Radiology pipeline",
+        group: "Case studies",
+        shortcut: "2",
+        run: () => selectCaseStudy("radiology-pipeline"),
+      },
+      {
+        id: "cs-anpr",
+        title: "Open ANPR pipeline",
+        group: "Case studies",
+        shortcut: "3",
+        run: () => selectCaseStudy("edge-cv-anpr"),
+      },
+      {
+        id: "cs-pocketdesk",
+        title: "Open PocketDesk",
+        group: "Case studies",
+        shortcut: "4",
+        run: () => selectCaseStudy("pocketdesk"),
+      },
+      // Actions
+      {
+        id: "act-copy-email",
+        title: "Copy email",
+        group: "Actions",
+        shortcut: "E",
+        run: () => {
+          copyToClipboard(config.email);
+          onClose();
+        },
+      },
+      {
+        id: "act-copy-curl",
+        title: "Copy curl command",
+        group: "Actions",
+        run: () => {
+          copyToClipboard(content.terminal.command);
+          onClose();
+        },
+      },
+      {
+        id: "act-cal",
+        title: "Open Cal.com ↗",
+        group: "Actions",
+        run: () => {
+          window.open(
+            `https://cal.com/${config.calLink}`,
+            "_blank",
+            "noopener,noreferrer"
+          );
+          onClose();
+        },
+      },
+      {
+        id: "act-theme",
+        title: "Toggle theme",
+        group: "Actions",
+        shortcut: "T",
+        run: () => {
+          setTheme(resolvedTheme === "dark" ? "light" : "dark");
+          onClose();
+        },
+      },
+      {
+        id: "act-gh",
+        title: "Open GitHub ↗",
+        group: "Actions",
+        run: () => {
+          window.open(config.github, "_blank", "noopener,noreferrer");
+          onClose();
+        },
+      },
+      {
+        id: "act-li",
+        title: "Open LinkedIn ↗",
+        group: "Actions",
+        run: () => {
+          window.open(config.linkedin, "_blank", "noopener,noreferrer");
+          onClose();
+        },
+      },
+      {
+        id: "act-tw",
+        title: "Open Twitter/X ↗",
+        group: "Actions",
+        run: () => {
+          window.open(config.twitter, "_blank", "noopener,noreferrer");
+          onClose();
+        },
+      },
+    ],
+    [
+      navigateTo,
+      selectCaseStudy,
+      copyToClipboard,
+      onClose,
+      resolvedTheme,
+      setTheme,
+    ]
+  );
+
+  const filteredCommands = useMemo(() => {
+    if (!query.trim()) return commands;
+    const lower = query.toLowerCase();
+    return commands.filter(
+      (c) =>
+        c.title.toLowerCase().includes(lower) ||
+        c.group.toLowerCase().includes(lower)
+    );
+  }, [commands, query]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => inputRef.current?.focus(), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev < filteredCommands.length - 1 ? prev + 1 : 0
+        );
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex((prev) =>
+          prev > 0 ? prev - 1 : filteredCommands.length - 1
+        );
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (filteredCommands[selectedIndex]) {
+          filteredCommands[selectedIndex].run();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, filteredCommands, selectedIndex, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/40"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        ref={containerRef}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[560px] border border-line bg-bg rounded-md shadow-2xl overflow-hidden flex flex-col"
+      >
+        {/* Search Input */}
+        <div className="h-12 px-3 border-b border-line flex items-center gap-2">
+          <Search className="w-4 h-4 text-muted shrink-0" strokeWidth={1.5} />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Type a command or search..."
+            className="w-full bg-transparent font-mono text-sm text-fg placeholder:text-muted focus:outline-none"
+          />
+          <kbd className="font-mono text-[11px] text-muted border border-line px-1.5 py-0.5 rounded-sm">
+            ESC
+          </kbd>
+        </div>
+
+        {/* Command list */}
+        <div className="max-h-80 overflow-y-auto p-2 divide-y divide-line/40">
+          {filteredCommands.length === 0 ? (
+            <div className="py-6 text-center font-mono text-xs text-muted">
+              No matching commands
+            </div>
+          ) : (
+            filteredCommands.map((cmd, idx) => {
+              const isSelected = idx === selectedIndex;
+              return (
+                <button
+                  key={cmd.id}
+                  type="button"
+                  onClick={cmd.run}
+                  onMouseEnter={() => setSelectedIndex(idx)}
+                  className={`w-full text-left px-3 py-2 flex items-center justify-between font-mono text-xs rounded-sm transition-colors cursor-pointer ${
+                    isSelected ? "bg-panel text-fg" : "text-muted hover:text-fg"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] uppercase text-muted tracking-wider">
+                      {cmd.group}
+                    </span>
+                    <span>/</span>
+                    <span className="text-fg">{cmd.title}</span>
+                  </div>
+                  {cmd.shortcut && (
+                    <kbd className="font-mono text-[10px] text-muted border border-line px-1.5 py-0.5 rounded-sm">
+                      {cmd.shortcut}
+                    </kbd>
+                  )}
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
