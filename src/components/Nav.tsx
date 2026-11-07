@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu } from "lucide-react";
-import { config } from "@/lib/config";
+import { Search, Menu } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface NavProps {
@@ -13,7 +12,7 @@ export function Nav({ onOpenPalette }: NavProps) {
   const [activeSection, setActiveSection] = useState<string>("");
 
   useEffect(() => {
-    const sections = ["case-studies", "stack", "terms"];
+    const sections = ["work", "process", "faq", "book"];
     const elements = sections
       .map((id) => document.getElementById(id))
       .filter(Boolean) as HTMLElement[];
@@ -36,91 +35,85 @@ export function Nav({ onOpenPalette }: NavProps) {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 h-12 border-b border-line bg-bg/90 backdrop-blur-sm">
-      <div className="max-w-5xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between">
-        {/* Left: Logo */}
+    <header className="sticky top-0 z-40 h-16 border-b border-line bg-paper/90 backdrop-blur-sm transition-colors">
+      <div className="max-w-6xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between">
+        {/* Left: Logo (name in serif) */}
         <a
           href="#"
-          className="font-mono text-sm font-semibold tracking-tight text-fg hover:opacity-80 transition-opacity flex items-center gap-0.5"
+          className="font-serif text-2xl text-ink hover:text-accent transition-colors flex items-center gap-1.5"
         >
-          <span>bhatti.dev</span>
-          <span className="text-fg animate-[pulse_1s_steps(2,start)_infinite] motion-reduce:hidden">
-            ▍
-          </span>
+          <span>Muhammad Mudassar Bhatti</span>
         </a>
 
         {/* Center / Right Links */}
-        <nav className="hidden sm:flex items-center gap-6 font-mono text-[13px]">
+        <nav className="hidden md:flex items-center gap-8 font-sans text-[15px] font-medium">
           <a
-            href="#case-studies"
+            href="#work"
             className={`transition-colors py-1 ${
-              activeSection === "case-studies"
-                ? "text-fg border-b border-fg"
-                : "text-muted hover:text-fg"
+              activeSection === "work"
+                ? "text-accent font-semibold"
+                : "text-muted hover:text-ink"
             }`}
           >
-            Case Studies
+            Work
           </a>
           <a
-            href="#stack"
+            href="#process"
             className={`transition-colors py-1 ${
-              activeSection === "stack"
-                ? "text-fg border-b border-fg"
-                : "text-muted hover:text-fg"
+              activeSection === "process"
+                ? "text-accent font-semibold"
+                : "text-muted hover:text-ink"
             }`}
           >
-            Stack
+            How I work
           </a>
           <a
-            href="#terms"
+            href="#faq"
             className={`transition-colors py-1 ${
-              activeSection === "terms"
-                ? "text-fg border-b border-fg"
-                : "text-muted hover:text-fg"
+              activeSection === "faq"
+                ? "text-accent font-semibold"
+                : "text-muted hover:text-ink"
             }`}
           >
-            Terms
-          </a>
-          <a
-            href={`https://cal.com/${config.calLink}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted hover:text-fg transition-colors inline-flex items-center gap-1"
-          >
-            Cal.com ↗
+            FAQ
           </a>
         </nav>
 
-        {/* Right: Cmd+K hint / Mobile Menu + Theme Toggle */}
-        <div className="flex items-center gap-2">
-          {/* Desktop Cmd+K Button */}
-          <button
-            type="button"
-            onClick={onOpenPalette}
-            className="hidden sm:inline-flex items-center gap-1.5 px-2 py-1 border border-line rounded-md text-muted hover:text-fg font-mono text-xs transition-colors cursor-pointer"
-            aria-label="Open command palette"
+        {/* Right CTA & Controls */}
+        <div className="flex items-center gap-3">
+          {/* Primary Accent Button */}
+          <a
+            href="#book"
+            className="hidden sm:inline-flex items-center justify-center px-4 h-9 bg-accent text-white font-sans text-sm font-medium rounded-lg hover:opacity-95 hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-xs"
           >
-            <span>Search</span>
-            <kbd className="border border-line px-1 rounded-xs text-[10px]">
-              ⌘K
-            </kbd>
-          </button>
+            Book a call
+          </a>
 
-          {/* Mobile Menu Button */}
+          {/* Secondary Cmd+K / Search button */}
           <button
             type="button"
             onClick={onOpenPalette}
-            className="sm:hidden w-8 h-8 inline-flex items-center justify-center border border-line rounded-md text-muted hover:text-fg transition-colors cursor-pointer"
-            aria-label="Open menu"
+            className="w-9 h-9 inline-flex items-center justify-center border border-line rounded-lg text-muted hover:text-ink hover:border-ink/20 transition-colors cursor-pointer"
+            aria-label="Search or run commands"
+            title="Search (⌘K)"
           >
-            <Menu className="w-4 h-4" strokeWidth={1.5} />
+            <Search className="w-4 h-4" strokeWidth={1.5} />
           </button>
 
           {/* Theme Toggle */}
-          <ThemeToggle />
+          <ThemeToggle className="w-9 h-9 rounded-lg" />
+
+          {/* Mobile menu link */}
+          <button
+            type="button"
+            onClick={onOpenPalette}
+            className="md:hidden w-9 h-9 inline-flex items-center justify-center border border-line rounded-lg text-muted hover:text-ink transition-colors cursor-pointer"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="w-4 h-4" strokeWidth={1.5} />
+          </button>
         </div>
       </div>
     </header>
   );
 }
-

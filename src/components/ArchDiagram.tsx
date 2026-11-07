@@ -15,7 +15,7 @@ export function ArchDiagram({ nodes, edges, ariaLabel }: ArchDiagramProps) {
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
 
   return (
-    <div className="w-full border border-line bg-panel/50 rounded-md p-4 overflow-x-auto">
+    <div className="w-full border border-line bg-paper/60 rounded-xl p-4 overflow-x-auto">
       <div className="min-w-[640px]">
         <svg
           viewBox="0 0 720 230"
@@ -44,7 +44,7 @@ export function ArchDiagram({ nodes, edges, ariaLabel }: ArchDiagramProps) {
               markerHeight="6"
               orient="auto-start-reverse"
             >
-              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="var(--color-fg)" />
+              <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="var(--color-accent)" />
             </marker>
           </defs>
 
@@ -103,13 +103,13 @@ export function ArchDiagram({ nodes, edges, ariaLabel }: ArchDiagramProps) {
                   x2={endX}
                   y2={endY}
                   stroke={
-                    isEdgeActive ? "var(--color-fg)" : "var(--color-muted)"
+                    isEdgeActive ? "var(--color-accent)" : "var(--color-line)"
                   }
-                  strokeWidth="1"
+                  strokeWidth="1.5"
                   markerEnd={
                     isEdgeActive ? "url(#arrow-active)" : "url(#arrow-default)"
                   }
-                  className="transition-[stroke] duration-120"
+                  className="transition-[stroke] duration-150"
                 />
                 {edge.label && (
                   <g>
@@ -118,17 +118,17 @@ export function ArchDiagram({ nodes, edges, ariaLabel }: ArchDiagramProps) {
                       y={midY - 9}
                       width="44"
                       height="18"
-                      fill="var(--color-bg)"
+                      fill="var(--color-surface)"
                       stroke="var(--color-line)"
                       strokeWidth="0.5"
-                      rx="2"
+                      rx="4"
                     />
                     <text
                       x={midX}
                       y={midY + 3.5}
                       textAnchor="middle"
                       fill="var(--color-muted)"
-                      className="font-mono text-[10px]"
+                      className="font-sans text-[11px]"
                     >
                       {edge.label}
                     </text>
@@ -159,20 +159,20 @@ export function ArchDiagram({ nodes, edges, ariaLabel }: ArchDiagramProps) {
                   y={node.y}
                   width={w}
                   height={h}
-                  rx="4"
-                  fill="var(--color-panel)"
+                  rx="6"
+                  fill="var(--color-surface)"
                   stroke={
-                    isNodeActive ? "var(--color-fg)" : "var(--color-line)"
+                    isNodeActive ? "var(--color-accent)" : "var(--color-line)"
                   }
-                  strokeWidth="1"
-                  className="transition-[stroke] duration-120"
+                  strokeWidth={isNodeActive ? 1.5 : 1}
+                  className="transition-[stroke] duration-150 shadow-xs"
                 />
                 <text
                   x={node.x + w / 2}
                   y={node.sub ? node.y + h / 2 - 4 : node.y + h / 2 + 4}
                   textAnchor="middle"
-                  fill="var(--color-fg)"
-                  className="font-mono text-[12px] font-medium"
+                  fill="var(--color-ink)"
+                  className="font-sans text-[12px] font-medium"
                 >
                   {node.label}
                 </text>
@@ -195,4 +195,3 @@ export function ArchDiagram({ nodes, edges, ariaLabel }: ArchDiagramProps) {
     </div>
   );
 }
-

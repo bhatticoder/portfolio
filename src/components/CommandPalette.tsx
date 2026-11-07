@@ -68,11 +68,10 @@ export function CommandPalette({
       if (onOpenCaseStudy) {
         onOpenCaseStudy(id);
       }
-      const el = document.getElementById("case-studies");
+      const el = document.getElementById("work");
       if (el) {
         el.scrollIntoView({ behavior: "smooth" });
       }
-      history.replaceState(null, "", `#case-studies/${id}`);
     },
     [onClose, onOpenCaseStudy]
   );
@@ -102,31 +101,31 @@ export function CommandPalette({
     () => [
       // Navigate
       {
-        id: "nav-cases",
-        title: "Case studies",
+        id: "nav-work",
+        title: "Selected Work",
         group: "Navigate",
-        shortcut: "G C",
-        run: () => navigateTo("#case-studies"),
+        shortcut: "G W",
+        run: () => navigateTo("#work"),
       },
       {
-        id: "nav-demos",
-        title: "Demos",
+        id: "nav-process",
+        title: "How I work (Process)",
         group: "Navigate",
-        run: () => navigateTo("#demos"),
+        shortcut: "G P",
+        run: () => navigateTo("#process"),
       },
       {
-        id: "nav-stack",
-        title: "Stack",
+        id: "nav-skills",
+        title: "What I work with",
         group: "Navigate",
-        shortcut: "G S",
-        run: () => navigateTo("#stack"),
+        run: () => navigateTo("#skills"),
       },
       {
-        id: "nav-terms",
-        title: "Working terms",
+        id: "nav-faq",
+        title: "Terms & FAQ",
         group: "Navigate",
-        shortcut: "G T",
-        run: () => navigateTo("#terms"),
+        shortcut: "G F",
+        run: () => navigateTo("#faq"),
       },
       {
         id: "nav-book",
@@ -138,28 +137,28 @@ export function CommandPalette({
       // Case Studies
       {
         id: "cs-docsentry",
-        title: "Open DocSentry",
+        title: "DocSentry — Doc integrity agent",
         group: "Case studies",
         shortcut: "1",
         run: () => selectCaseStudy("docsentry"),
       },
       {
         id: "cs-radiology",
-        title: "Open Radiology pipeline",
+        title: "Radiology & Document Pipeline",
         group: "Case studies",
         shortcut: "2",
         run: () => selectCaseStudy("radiology-pipeline"),
       },
       {
         id: "cs-anpr",
-        title: "Open ANPR pipeline",
+        title: "Real-Time Vehicle & Plate Recognition",
         group: "Case studies",
         shortcut: "3",
         run: () => selectCaseStudy("edge-cv-anpr"),
       },
       {
         id: "cs-pocketdesk",
-        title: "Open PocketDesk",
+        title: "PocketDesk — Browser desktop streamer",
         group: "Case studies",
         shortcut: "4",
         run: () => selectCaseStudy("pocketdesk"),
@@ -295,7 +294,7 @@ export function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/40"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/40 backdrop-blur-xs"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -303,20 +302,20 @@ export function CommandPalette({
       <div
         ref={containerRef}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[560px] border border-line bg-bg rounded-md shadow-2xl overflow-hidden flex flex-col"
+        className="w-full max-w-[560px] border border-line bg-surface rounded-xl shadow-2xl overflow-hidden flex flex-col font-sans"
       >
         {/* Search Input */}
-        <div className="h-12 px-3 border-b border-line flex items-center gap-2">
-          <Search className="w-4 h-4 text-muted shrink-0" strokeWidth={1.5} />
+        <div className="h-14 px-4 border-b border-line flex items-center gap-3">
+          <Search className="w-5 h-5 text-muted shrink-0" strokeWidth={1.5} />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Type a command or search..."
-            className="w-full bg-transparent font-mono text-sm text-fg placeholder:text-muted focus:outline-none"
+            placeholder="Search work, process, or actions..."
+            className="w-full bg-transparent text-sm text-ink placeholder:text-muted focus:outline-none"
           />
-          <kbd className="font-mono text-[11px] text-muted border border-line px-1.5 py-0.5 rounded-sm">
+          <kbd className="font-mono text-[11px] text-muted border border-line px-1.5 py-0.5 rounded-sm bg-paper">
             ESC
           </kbd>
         </div>
@@ -324,8 +323,8 @@ export function CommandPalette({
         {/* Command list */}
         <div className="max-h-80 overflow-y-auto p-2 divide-y divide-line/40">
           {filteredCommands.length === 0 ? (
-            <div className="py-6 text-center font-mono text-xs text-muted">
-              No matching commands
+            <div className="py-8 text-center text-xs text-muted font-sans">
+              No matching results found
             </div>
           ) : (
             filteredCommands.map((cmd, idx) => {
@@ -336,19 +335,21 @@ export function CommandPalette({
                   type="button"
                   onClick={cmd.run}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full text-left px-3 py-2 flex items-center justify-between font-mono text-xs rounded-sm transition-colors cursor-pointer ${
-                    isSelected ? "bg-panel text-fg" : "text-muted hover:text-fg"
+                  className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between text-sm rounded-lg transition-colors cursor-pointer ${
+                    isSelected
+                      ? "bg-paper text-accent font-medium"
+                      : "text-muted hover:text-ink"
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] uppercase text-muted tracking-wider">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-[10px] uppercase font-mono text-muted tracking-wider">
                       {cmd.group}
                     </span>
-                    <span>/</span>
-                    <span className="text-fg">{cmd.title}</span>
+                    <span className="text-muted/60">/</span>
+                    <span className="text-ink">{cmd.title}</span>
                   </div>
                   {cmd.shortcut && (
-                    <kbd className="font-mono text-[10px] text-muted border border-line px-1.5 py-0.5 rounded-sm">
+                    <kbd className="font-mono text-[10px] text-muted border border-line px-1.5 py-0.5 rounded-sm bg-paper">
                       {cmd.shortcut}
                     </kbd>
                   )}

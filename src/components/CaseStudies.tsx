@@ -1,324 +1,455 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback, useSyncExternalStore } from "react";
 import { caseStudies, CaseStudy } from "@/data/caseStudies";
 import { metrics } from "@/data/metrics";
 import { ArchDiagram } from "@/components/ArchDiagram";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, X, Layers } from "lucide-react";
 
 interface CaseStudiesProps {
   selectedId?: string;
   onSelectId?: (id: string) => void;
 }
 
-export function CaseStudies({ selectedId, onSelectId }: CaseStudiesProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [prevSelectedId, setPrevSelectedId] = useState(selectedId);
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const sectionRef = useRef<HTMLDivElement>(null);
+function subscribeStorage(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
 
-  // Synchronize state from prop if changed during render
+function getStoredViewMode(): "plain" | "engineer" {
+  try {
+    const val = localStorage.getItem("bhatti_view_mode");
+    if (val === "plain" || val === "engineer") return val;
+  } catch {
+    // Ignore storage errors
+  }
+  return "plain";
+}
+
+export function CaseStudies({ selectedId, onSelectId }: CaseStudiesProps) {
+  const persistedMode = useSyncExternalStore<"plain" | "engineer">(
+    subscribeStorage,
+    getStoredViewMode,
+    () => "plain"
+  );
+  const [viewMode, setViewMode] = useState<"plain" | "engineer">(persistedMode);
+  const [detailStudy, setDetailStudy] = useState<CaseStudy | null>(null);
+  const [prevSelectedId, setPrevSelectedId] = useState(selectedId);
+
+  // Sync external selection during render
   if (selectedId !== prevSelectedId) {
     setPrevSelectedId(selectedId);
     if (selectedId) {
-      const idx = caseStudies.findIndex((cs) => cs.id === selectedId);
-      if (idx !== -1 && idx !== activeIndex) {
-        setActiveIndex(idx);
+      const match = caseStudies.find((c) => c.id === selectedId);
+      if (match) {
+        setDetailStudy(match);
       }
     }
   }
 
-  // Handle URL hash on mount and hashchange
+  const changeViewMode = (mode: "plain" | "engineer") => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem("bhatti_view_mode", mode);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
+  // Handle ESC key to close modal/drawer
   useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash;
-      const match = hash.match(/#case-studies\/(.+)$/) || hash.match(/#(.+)$/);
-      if (match && match[1]) {
-        const id = match[1];
-        const idx = caseStudies.findIndex((cs) => cs.id === id);
-        if (idx !== -1) {
-          setActiveIndex(idx);
-          if (onSelectId) onSelectId(id);
-        }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && detailStudy) {
+        setDetailStudy(null);
       }
     };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [detailStudy]);
 
-    const timer = setTimeout(handleHash, 0);
-    window.addEventListener("hashchange", handleHash);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("hashchange", handleHash);
-    };
-  }, [onSelectId]);
-
-  const selectTab = useCallback(
-    (index: number) => {
-      setActiveIndex(index);
-      const study = caseStudies[index];
-      history.replaceState(null, "", `#case-studies/${study.id}`);
-      if (onSelectId) onSelectId(study.id);
+  const openDetails = useCallback(
+    (cs: CaseStudy) => {
+      setDetailStudy(cs);
+      if (onSelectId) onSelectId(cs.id);
     },
     [onSelectId]
   );
 
-  // Keyboard navigation inside section
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key >= "1" && e.key <= "4") {
-      const idx = parseInt(e.key, 10) - 1;
-      if (idx >= 0 && idx < caseStudies.length) {
-        e.preventDefault();
-        selectTab(idx);
-        tabRefs.current[idx]?.focus();
-      }
-    } else if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-      e.preventDefault();
-      const next = (activeIndex + 1) % caseStudies.length;
-      selectTab(next);
-      tabRefs.current[next]?.focus();
-    } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-      e.preventDefault();
-      const prev = (activeIndex - 1 + caseStudies.length) % caseStudies.length;
-      selectTab(prev);
-      tabRefs.current[prev]?.focus();
-    }
-  };
-
-  const currentStudy: CaseStudy = caseStudies[activeIndex];
-  const studyMetrics = metrics[currentStudy.metricsKey] || [];
-
   return (
-    <div
-      ref={sectionRef}
-      onKeyDown={handleKeyDown}
-      className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start focus:outline-none"
-    >
-      {/* Tab List */}
-      <div
-        role="tablist"
-        aria-orientation="vertical"
-        className="lg:col-span-4 flex lg:flex-col overflow-x-auto lg:overflow-visible gap-2 pb-2 lg:pb-0 border-b lg:border-b-0 border-line"
-      >
-        {caseStudies.map((cs, idx) => {
-          const isSelected = idx === activeIndex;
-          const numStr = `0${idx + 1}`;
+    <div id="work" className="space-y-8">
+      {/* Header & Segmented Control */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-4 border-b border-line">
+        <div>
+          <span className="font-mono text-xs uppercase tracking-widest text-muted">
+            01 / Selected Work
+          </span>
+          <h2 className="mt-2 font-serif text-3xl sm:text-4xl text-ink tracking-tight">
+            Real systems deployed for real work
+          </h2>
+          <p className="mt-2 text-muted text-base max-w-xl font-sans">
+            Every project addresses a specific business bottleneck. Choose your
+            preferred reading mode below.
+          </p>
+        </div>
+
+        {/* Segmented Control */}
+        <div className="self-start sm:self-auto inline-flex p-1 bg-surface border border-line rounded-xl shadow-xs">
+          <button
+            type="button"
+            onClick={() => changeViewMode("plain")}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+              viewMode === "plain"
+                ? "bg-paper text-accent font-semibold shadow-xs"
+                : "text-muted hover:text-ink"
+            }`}
+          >
+            Plain English
+          </button>
+          <button
+            type="button"
+            onClick={() => changeViewMode("engineer")}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+              viewMode === "engineer"
+                ? "bg-paper text-accent font-semibold shadow-xs"
+                : "text-muted hover:text-ink"
+            }`}
+          >
+            Engineer view
+          </button>
+        </div>
+      </div>
+
+      {/* 2x2 Grid of Large Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {caseStudies.map((cs) => {
           return (
-            <button
+            <article
               key={cs.id}
-              ref={(el) => {
-                tabRefs.current[idx] = el;
-              }}
-              role="tab"
-              aria-selected={isSelected}
-              aria-controls={`panel-${cs.id}`}
-              id={`tab-${cs.id}`}
-              tabIndex={isSelected ? 0 : -1}
-              onClick={() => selectTab(idx)}
-              className={`text-left p-3.5 border rounded-sm font-mono transition-colors shrink-0 cursor-pointer ${
-                isSelected
-                  ? "border-fg bg-panel text-fg"
-                  : "border-line bg-transparent text-muted hover:text-fg hover:border-zinc-400 dark:hover:border-zinc-600"
-              }`}
+              className="border border-line bg-surface rounded-xl overflow-hidden shadow-xs hover:border-line/80 transition-all flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between text-xs text-muted mb-1">
-                <span>{numStr}</span>
-                <span className="text-[11px] uppercase tracking-wider">
-                  {cs.tag.split("·")[0].trim()}
-                </span>
+              <div>
+                {/* Visual Thumbnail (16:10 aspect ratio) */}
+                <div className="relative aspect-[16/10] bg-paper border-b border-line flex flex-col items-center justify-center p-6 text-center select-none overflow-hidden group">
+                  <div className="w-12 h-12 rounded-xl border border-line bg-surface flex items-center justify-center text-muted mb-3 group-hover:scale-105 transition-transform">
+                    <Layers className="w-6 h-6 text-accent" strokeWidth={1.5} />
+                  </div>
+                  <div className="font-serif text-lg text-ink">
+                    {cs.title} Demo Screen
+                  </div>
+                  <span className="mt-1 font-mono text-xs text-muted">
+                    Screenshot coming
+                  </span>
+                </div>
+
+                {/* Card Content Body */}
+                <div className="p-6 sm:p-8">
+                  {/* Top metadata */}
+                  <div className="flex items-center justify-between text-xs text-muted mb-2 font-mono">
+                    <span className="uppercase tracking-wider">
+                      {cs.tag.split("·")[0].trim()}
+                    </span>
+                    <span className="text-ok font-medium flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-ok inline-block" />
+                      Production
+                    </span>
+                  </div>
+
+                  {/* Title & Subtitle */}
+                  <h3 className="font-serif text-2xl sm:text-[28px] text-ink tracking-tight">
+                    {cs.title}
+                  </h3>
+                  <p className="mt-1 text-sm text-muted font-sans line-clamp-1">
+                    {cs.subtitle}
+                  </p>
+
+                  {/* Content based on viewMode */}
+                  {viewMode === "plain" ? (
+                    /* Plain English 3 Labeled Rows */
+                    <div className="mt-6 space-y-4 font-sans text-[15px] border-t border-line/60 pt-5">
+                      <div>
+                        <div className="text-xs uppercase font-mono text-muted tracking-wider mb-1">
+                          The Problem
+                        </div>
+                        <p className="text-muted leading-relaxed">
+                          {cs.plain.problem}
+                        </p>
+                      </div>
+
+                      <div>
+                        <div className="text-xs uppercase font-mono text-muted tracking-wider mb-1">
+                          What I built
+                        </div>
+                        <p className="text-ink leading-relaxed">
+                          {cs.plain.built}
+                        </p>
+                      </div>
+
+                      <div className="p-3 bg-paper border border-line rounded-lg">
+                        <div className="text-xs uppercase font-mono text-accent tracking-wider mb-1 font-medium">
+                          What you get
+                        </div>
+                        <p className="text-ink font-medium leading-relaxed">
+                          {cs.plain.outcome}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Inline Engineer View */
+                    <div className="mt-6 space-y-6 font-sans text-sm border-t border-line/60 pt-5">
+                      <div>
+                        <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">
+                          System Architecture
+                        </h4>
+                        <ArchDiagram
+                          nodes={cs.engineer.diagram.nodes}
+                          edges={cs.engineer.diagram.edges}
+                          ariaLabel={cs.engineer.diagram.ariaLabel}
+                        />
+                      </div>
+
+                      <div>
+                        <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">
+                          Key Trade-offs
+                        </h4>
+                        <div className="border border-line rounded-lg overflow-hidden text-xs">
+                          {cs.engineer.tradeoffs.slice(0, 2).map(([chose, gaveUp], i) => (
+                            <div
+                              key={i}
+                              className="p-2.5 border-b border-line last:border-b-0 bg-paper/50 grid grid-cols-2 gap-2"
+                            >
+                              <div className="font-medium text-ink">{chose}</div>
+                              <div className="text-muted">{gaveUp}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">
+                          Stack
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {cs.engineer.stack.map((item) => (
+                            <span
+                              key={item}
+                              className="px-2 py-0.5 text-xs font-mono bg-paper border border-line rounded-md text-ink"
+                            >
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="font-sans font-medium text-sm text-fg tracking-tight">
-                {cs.title}
+
+              {/* Bottom Actions Row */}
+              <div className="px-6 pb-6 pt-2 sm:px-8 sm:pb-8 flex flex-wrap items-center justify-between gap-3 border-t border-line/40">
+                <div className="flex items-center gap-2">
+                  {cs.links.demo ? (
+                    <a
+                      href={cs.links.demo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-lg text-xs font-medium text-ink hover:border-ink/40 transition-colors"
+                    >
+                      <span>Live demo</span>
+                      <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    </a>
+                  ) : (
+                    <span className="text-xs text-muted/60 px-3 py-1.5 border border-line/40 rounded-lg select-none cursor-not-allowed">
+                      On request (NDA)
+                    </span>
+                  )}
+
+                  {cs.links.github ? (
+                    <a
+                      href={cs.links.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-paper border border-line rounded-lg text-xs font-medium text-ink hover:border-ink/40 transition-colors"
+                    >
+                      <span>View code</span>
+                      <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
+                    </a>
+                  ) : null}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => openDetails(cs)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-accent hover:underline cursor-pointer"
+                >
+                  <span>Details & Architecture →</span>
+                </button>
               </div>
-              <div className="font-mono text-xs text-muted mt-1 line-clamp-1">
-                {cs.subtitle}
-              </div>
-            </button>
+            </article>
           );
         })}
       </div>
 
-      {/* Tab Panel */}
-      <div
-        role="tabpanel"
-        id={`panel-${currentStudy.id}`}
-        aria-labelledby={`tab-${currentStudy.id}`}
-        className="lg:col-span-8 border border-line bg-panel/30 p-6 sm:p-8 rounded-md transition-opacity duration-150 min-h-[580px]"
-      >
-        {/* 1. Header row */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-line pb-4">
-          <div>
-            <h3 className="text-2xl font-semibold tracking-tight text-fg">
-              {currentStudy.title}
-            </h3>
-            <p className="font-mono text-xs text-muted mt-1">
-              {currentStudy.subtitle} · {currentStudy.tag}
-            </p>
-          </div>
-          <span className="self-start sm:self-auto font-mono text-[11px] uppercase tracking-wider text-ok border border-ok/30 px-2 py-0.5 rounded-sm bg-ok/5">
-            Production
-          </span>
-        </div>
-
-        {/* 2. Problem */}
-        <div className="mt-6">
-          <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">
-            The Constraint / Problem
-          </h4>
-          <p className="text-muted text-sm sm:text-base leading-relaxed">
-            {currentStudy.problem}
-          </p>
-        </div>
-
-        {/* 3. System Architecture Diagram */}
-        <div className="mt-8">
-          <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-3">
-            System Architecture
-          </h4>
-          <ArchDiagram
-            nodes={currentStudy.diagram.nodes}
-            edges={currentStudy.diagram.edges}
-            ariaLabel={currentStudy.diagram.ariaLabel}
-          />
-        </div>
-
-        {/* 4. How it works */}
-        <div className="mt-8">
-          <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-3">
-            How It Works
-          </h4>
-          <ul className="space-y-2.5">
-            {currentStudy.how.map((point, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-2.5 text-sm text-muted"
-              >
-                <span className="font-mono text-xs text-muted select-none mt-0.5">
-                  —
-                </span>
-                <span className="leading-relaxed">{point}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* 5. Trade-offs */}
-        <div className="mt-8">
-          <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-3">
-            Architectural Trade-offs
-          </h4>
-          <div className="border border-line rounded-sm overflow-hidden font-mono text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 bg-panel border-b border-line p-2.5 text-muted uppercase tracking-wider">
-              <div>Chose</div>
-              <div className="hidden sm:block">Gave up</div>
-            </div>
-            {currentStudy.tradeoffs.map(([chose, gaveUp], i) => (
-              <div
-                key={i}
-                className="grid grid-cols-1 sm:grid-cols-2 p-3 gap-2 border-b border-line last:border-b-0"
-              >
-                <div className="text-fg font-medium">{chose}</div>
-                <div className="text-muted">
-                  <span className="sm:hidden text-muted uppercase text-[10px] block mb-0.5">
-                    Gave up:{" "}
+      {/* Side Slide-Over Modal for Full Engineer Details */}
+      {detailStudy && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs"
+          onClick={() => setDetailStudy(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-2xl bg-surface border-l border-line h-full overflow-y-auto p-6 sm:p-8 flex flex-col justify-between shadow-2xl"
+          >
+            <div>
+              {/* Top drawer header */}
+              <div className="flex items-start justify-between pb-4 border-b border-line">
+                <div>
+                  <span className="font-mono text-xs uppercase tracking-wider text-muted">
+                    {detailStudy.tag}
                   </span>
-                  {gaveUp}
+                  <h3 className="font-serif text-3xl text-ink tracking-tight mt-1">
+                    {detailStudy.title}
+                  </h3>
+                  <p className="text-sm text-muted font-sans mt-0.5">
+                    {detailStudy.subtitle}
+                  </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setDetailStudy(null)}
+                  className="w-8 h-8 rounded-lg border border-line flex items-center justify-center text-muted hover:text-ink transition-colors cursor-pointer"
+                  aria-label="Close details"
+                >
+                  <X className="w-4 h-4" strokeWidth={1.5} />
+                </button>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* 6. Stack */}
-        <div className="mt-8">
-          <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-3">
-            Operational Stack
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {currentStudy.stack.map((item) => (
-              <span
-                key={item}
-                className="border border-line px-2.5 py-1 font-mono text-xs rounded-sm bg-panel text-fg"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
+              {/* The Constraint / Problem */}
+              <div className="mt-6">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">
+                  The Constraint / Problem
+                </h4>
+                <p className="text-muted text-[15px] leading-relaxed">
+                  {detailStudy.engineer.problem}
+                </p>
+              </div>
 
-        {/* 7. Metrics Row */}
-        <div className="mt-8 pt-6 border-t border-line">
-          <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-3">
-            Benchmark Figures
-          </h4>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {studyMetrics.map((m) => (
-              <div
-                key={m.label}
-                className="border border-line p-3 rounded-sm bg-panel/50"
-              >
-                <div className="font-mono text-[10px] uppercase text-muted tracking-wider line-clamp-1">
-                  {m.label}
-                </div>
-                <div className="font-mono text-sm sm:text-base font-semibold mt-1.5 text-fg">
-                  {m.value ?? (
-                    <span
-                      title="Benchmark published on request"
-                      className="cursor-help text-muted underline decoration-dotted underline-offset-2"
+              {/* Architecture Diagram */}
+              <div className="mt-6">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">
+                  System Architecture
+                </h4>
+                <ArchDiagram
+                  nodes={detailStudy.engineer.diagram.nodes}
+                  edges={detailStudy.engineer.diagram.edges}
+                  ariaLabel={detailStudy.engineer.diagram.ariaLabel}
+                />
+              </div>
+
+              {/* How it works */}
+              <div className="mt-6">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">
+                  How It Works
+                </h4>
+                <ul className="space-y-2">
+                  {detailStudy.engineer.how.map((point, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2.5 text-sm text-muted"
                     >
-                      n/a
-                    </span>
-                  )}
+                      <span className="text-accent select-none mt-0.5">—</span>
+                      <span className="leading-relaxed">{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Trade-offs Table */}
+              <div className="mt-6">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">
+                  Architectural Trade-offs
+                </h4>
+                <div className="border border-line rounded-lg overflow-hidden text-xs font-sans">
+                  <div className="grid grid-cols-2 bg-paper p-2.5 border-b border-line text-muted uppercase font-mono tracking-wider">
+                    <div>Chose</div>
+                    <div>Gave up</div>
+                  </div>
+                  {detailStudy.engineer.tradeoffs.map(([chose, gaveUp], i) => (
+                    <div
+                      key={i}
+                      className="grid grid-cols-2 p-2.5 gap-3 border-b border-line last:border-b-0"
+                    >
+                      <div className="font-medium text-ink">{chose}</div>
+                      <div className="text-muted">{gaveUp}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+
+              {/* Stack */}
+              <div className="mt-6">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">
+                  Stack
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {detailStudy.engineer.stack.map((item) => (
+                    <span
+                      key={item}
+                      className="border border-line px-2.5 py-1 text-xs font-mono rounded-md bg-paper text-ink"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Benchmark Metrics */}
+              <div className="mt-6">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">
+                  Benchmark Metrics
+                </h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {(metrics[detailStudy.engineer.metricsKey] || []).map((m) => (
+                    <div
+                      key={m.label}
+                      className="border border-line p-3 rounded-lg bg-paper"
+                    >
+                      <div className="text-[11px] uppercase font-mono text-muted">
+                        {m.label}
+                      </div>
+                      <div className="font-mono text-base font-semibold text-ink mt-1">
+                        {m.value ?? (
+                          <span
+                            title="Benchmark published on request"
+                            className="cursor-help text-muted underline decoration-dotted underline-offset-2"
+                          >
+                            n/a
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Modal CTA */}
+            <div className="pt-6 mt-8 border-t border-line flex items-center justify-between">
+              <span className="text-xs text-muted font-mono">
+                Full code & benchmarks available under NDA
+              </span>
+              <button
+                type="button"
+                onClick={() => setDetailStudy(null)}
+                className="px-4 py-2 bg-paper border border-line rounded-lg text-sm font-medium text-ink hover:border-ink/40 transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
-
-        {/* 8. Links Row */}
-        <div className="mt-8 pt-6 border-t border-line flex flex-wrap items-center gap-4">
-          {currentStudy.links.github ? (
-            <a
-              href={currentStudy.links.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 font-mono text-xs border border-line px-3 py-1.5 rounded-sm hover:border-fg text-fg transition-colors"
-            >
-              <span>GitHub</span>
-              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </a>
-          ) : (
-            <span
-              className="font-mono text-xs text-muted/60 select-none border border-line/50 px-3 py-1.5 rounded-sm cursor-not-allowed"
-              aria-disabled="true"
-            >
-              Repo available under NDA / on request
-            </span>
-          )}
-
-          {currentStudy.links.demo ? (
-            <a
-              href={currentStudy.links.demo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 font-mono text-xs border border-line px-3 py-1.5 rounded-sm hover:border-fg text-fg transition-colors"
-            >
-              <span>Live demo</span>
-              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </a>
-          ) : null}
-
-          {currentStudy.links.writeup ? (
-            <a
-              href={currentStudy.links.writeup}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 font-mono text-xs border border-line px-3 py-1.5 rounded-sm hover:border-fg text-fg transition-colors"
-            >
-              <span>Write-up</span>
-              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </a>
-          ) : null}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

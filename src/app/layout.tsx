@@ -1,50 +1,51 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { content } from "@/data/content";
 import { config } from "@/lib/config";
 import { skills } from "@/data/skills";
 
-const inter = Inter({
-  variable: "--font-inter",
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
   subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
   display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains",
   subsets: ["latin"],
+  variable: "--font-mono",
   display: "swap",
 });
 
-function truncateDescription(text: string, max: number = 155): string {
-  if (text.length <= max) return text;
-  const sub = text.slice(0, max);
-  const lastSpace = sub.lastIndexOf(" ");
-  return (lastSpace > -1 ? sub.slice(0, lastSpace) : sub) + "…";
-}
-
-const description = truncateDescription(content.hero.sub, 155);
-
 export const metadata: Metadata = {
   metadataBase: new URL(config.siteUrl),
-  title: `${content.name} — ${content.role}`,
-  description,
+  title: "Muhammad Mudassar Bhatti — AI Systems & Automation Developer",
+  description:
+    "I build AI systems that do real work for your business: document workflows, computer vision, and reliable full-stack developer tools.",
   alternates: {
     canonical: config.siteUrl,
   },
   openGraph: {
-    title: `${content.name} — ${content.role}`,
-    description,
+    title: "Muhammad Mudassar Bhatti — AI Systems & Automation Developer",
+    description:
+      "I build AI systems that do real work for your business: document workflows, computer vision, and reliable full-stack developer tools.",
     url: config.siteUrl,
-    siteName: content.handle,
+    siteName: "bhatti.dev",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: `${content.name} — ${content.role}`,
-    description,
+    title: "Muhammad Mudassar Bhatti — AI Systems & Automation Developer",
+    description:
+      "I build AI systems that do real work for your business: document workflows, computer vision, and reliable full-stack developer tools.",
   },
 };
 
@@ -71,7 +72,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${instrumentSerif.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <head>
         <script
@@ -79,11 +80,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="antialiased min-h-screen">
+      <body className="antialiased min-h-screen bg-paper text-ink">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
           {children}

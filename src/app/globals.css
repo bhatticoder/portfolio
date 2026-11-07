@@ -2,22 +2,36 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
-  --color-bg: #ffffff;
-  --color-fg: #09090b;
-  --color-muted: #71717a;
-  --color-line: #e4e4e7;
-  --color-panel: #fafafa;
-  --color-ok: #10b981;
+  --font-serif: var(--font-serif), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-paper: #FAF8F5;
+  --color-surface: #FFFFFF;
+  --color-ink: #16130F;
+  --color-muted: #6B645B;
+  --color-line: #E7E2DA;
+  --color-accent: #D9480F;
+  --color-ok: #10B981;
+
+  /* Aliases for compatibility */
+  --color-bg: #FAF8F5;
+  --color-fg: #16130F;
+  --color-panel: #FFFFFF;
 }
 
 .dark {
-  --color-bg: #09090b;
-  --color-fg: #fafafa;
-  --color-muted: #a1a1aa;
-  --color-line: #27272a;
-  --color-panel: #0c0c0f;
+  --color-paper: #12100D;
+  --color-surface: #1A1713;
+  --color-ink: #F5F1EA;
+  --color-muted: #A39B90;
+  --color-line: #2B2620;
+  --color-accent: #FF7A3D;
+  --color-ok: #10B981;
+
+  --color-bg: #12100D;
+  --color-fg: #F5F1EA;
+  --color-panel: #1A1713;
 }
 
 html {
@@ -25,15 +39,17 @@ html {
 }
 
 body {
-  background: var(--color-bg);
-  color: var(--color-fg);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
   font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: var(--color-fg);
-  color: var(--color-bg);
+  background-color: var(--color-accent);
+  color: #FFFFFF;
 }
 
 @media (prefers-reduced-motion: reduce) {
