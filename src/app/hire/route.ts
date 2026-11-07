@@ -1,7 +1,7 @@
 import { content } from "@/data/content";
 
 export function GET() {
-  const cal = process.env.NEXT_PUBLIC_CAL_LINK ?? "bhatti/scoping-call";
+  const cal = process.env.NEXT_PUBLIC_CAL_LINK ?? "mudasar-bhatti";
   const lines = content.terminal.output.map((l) =>
     l.replace("<NEXT_PUBLIC_CAL_LINK>", cal)
   );

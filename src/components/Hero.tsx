@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { content } from "@/data/content";
 import { AvailabilityBadge } from "@/components/AvailabilityBadge";
 import { TerminalSnippet } from "@/components/TerminalSnippet";
@@ -10,7 +11,19 @@ export function Hero() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
         {/* Left Column (7 cols on lg) */}
         <div className="lg:col-span-7 flex flex-col items-start text-left">
-          <AvailabilityBadge />
+          <div className="flex items-center gap-3">
+            <div className="relative w-11 h-11 rounded-full overflow-hidden border border-line shrink-0 bg-panel shadow-xs">
+              <Image
+                src="/profile.png"
+                alt="Muhammad Mudassar Bhatti"
+                width={44}
+                height={44}
+                priority
+                className="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-200"
+              />
+            </div>
+            <AvailabilityBadge />
+          </div>
 
           <p className="mt-8 font-mono text-xs uppercase tracking-wider text-muted">
             {content.hero.eyebrow}
