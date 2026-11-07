@@ -217,42 +217,19 @@ export function CommandPalette({
           onClose();
         },
       },
-      {
-        id: "act-gh",
-        title: "Open GitHub ↗",
-        group: "Actions",
-        run: () => {
-          window.open(settings.socials?.github || config.github, "_blank", "noopener,noreferrer");
-          onClose();
-        },
-      },
-      {
-        id: "act-li",
-        title: "Open LinkedIn ↗",
-        group: "Actions",
-        run: () => {
-          window.open(settings.socials?.linkedin || config.linkedin, "_blank", "noopener,noreferrer");
-          onClose();
-        },
-      },
-      {
-        id: "act-tw",
-        title: "Open Twitter/X ↗",
-        group: "Actions",
-        run: () => {
-          window.open(settings.socials?.twitter || config.twitter, "_blank", "noopener,noreferrer");
-          onClose();
-        },
-      },
-      {
-        id: "act-medium",
-        title: "Open Medium ↗",
-        group: "Actions",
-        run: () => {
-          window.open(settings.socials?.medium || config.medium, "_blank", "noopener,noreferrer");
-          onClose();
-        },
-      },
+      ...(Array.isArray(settings.socials)
+        ? settings.socials
+            .filter((soc) => soc && soc.url && soc.url.trim())
+            .map((soc) => ({
+              id: `act-soc-${soc.id || soc.platform}`,
+              title: `Open ${soc.platform} ↗`,
+              group: "Actions" as const,
+              run: () => {
+                window.open(soc.url, "_blank", "noopener,noreferrer");
+                onClose();
+              },
+            }))
+        : []),
     ],
     [
       navigateTo,

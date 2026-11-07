@@ -183,7 +183,29 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (res.ok && data.url) {
-        setSiteSettings((prev) => ({ ...prev, avatarUrl: data.url }));
+        setSiteSettings((prev) => {
+          const next = { ...prev, avatarUrl: data.url };
+          updateCachedSettings(next);
+          return next;
+        });
+
+        // Persist immediately to settings DB
+        fetch("/api/admin/settings", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminKey,
+          },
+          body: JSON.stringify({ ...siteSettings, avatarUrl: data.url }),
+        })
+          .then((r) => r.json())
+          .then((resData) => {
+            if (resData.settings) {
+              setSiteSettings(resData.settings);
+              updateCachedSettings(resData.settings);
+            }
+          })
+          .catch(() => {});
       } else {
         alert(data.error || "Avatar upload failed");
       }
@@ -193,6 +215,39 @@ export default function AdminPage() {
       setUploadingAvatar(false);
       if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
+  };
+
+  // Dynamic Social Links helpers
+  const handleAddSocialLink = () => {
+    setSiteSettings((prev) => ({
+      ...prev,
+      socials: [
+        ...(Array.isArray(prev.socials) ? prev.socials : []),
+        { id: String(Date.now()), platform: "", url: "" },
+      ],
+    }));
+  };
+
+  const handleUpdateSocialLink = (
+    index: number,
+    field: "platform" | "url",
+    value: string
+  ) => {
+    setSiteSettings((prev) => {
+      const updated = Array.isArray(prev.socials) ? [...prev.socials] : [];
+      if (updated[index]) {
+        updated[index] = { ...updated[index], [field]: value };
+      }
+      return { ...prev, socials: updated };
+    });
+  };
+
+  const handleRemoveSocialLink = (index: number) => {
+    setSiteSettings((prev) => {
+      const updated = Array.isArray(prev.socials) ? [...prev.socials] : [];
+      updated.splice(index, 1);
+      return { ...prev, socials: updated };
+    });
   };
 
   const handleStartCreate = () => {
@@ -1218,124 +1273,83 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Social Profiles & External Links */}
+                {/* Dynamic Social & Developer Links */}
                 <div className="p-5 border border-line rounded-xl bg-paper/50 space-y-4">
-                  <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold flex items-center gap-1.5">
-                    <Share2 className="w-4 h-4" />
-                    <span>3. Social & Developer Links</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-line/60">
+                    <div>
+                      <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold flex items-center gap-1.5">
+                        <Share2 className="w-4 h-4" />
+                        <span>3. Social & Developer Links (Dynamic)</span>
+                      </div>
+                      <p className="text-xs text-muted mt-0.5">
+                        Jitne mrzi links add karein (LinkedIn, GitHub, YouTube, Discord, Substack, etc.). Yeh footer aur search menu me real-time show honge.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAddSocialLink}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-accent text-white text-xs font-sans font-medium rounded-lg hover:opacity-95 transition-opacity cursor-pointer self-start sm:self-auto shadow-xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Social Link</span>
+                    </button>
                   </div>
-                  <p className="text-xs text-muted">
-                    Update any of these links whenever you change profiles. They immediately power the Nav, Footer, and Command Palette.
-                  </p>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
-                        LinkedIn URL
-                      </label>
-                      <input
-                        type="url"
-                        value={siteSettings.socials?.linkedin || ""}
-                        onChange={(e) =>
-                          setSiteSettings({
-                            ...siteSettings,
-                            socials: { ...siteSettings.socials, linkedin: e.target.value },
-                          })
-                        }
-                        placeholder="https://www.linkedin.com/in/mudasarbhatti/"
-                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
-                      />
-                    </div>
+                  <div className="space-y-3">
+                    {Array.isArray(siteSettings.socials) && siteSettings.socials.length > 0 ? (
+                      siteSettings.socials.map((link, idx) => (
+                        <div
+                          key={link.id || idx}
+                          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 p-3 bg-surface border border-line rounded-lg shadow-2xs"
+                        >
+                          <div className="w-full sm:w-1/3">
+                            <label className="block text-[10px] font-mono uppercase text-muted mb-0.5 sm:hidden">
+                              Platform Name
+                            </label>
+                            <input
+                              type="text"
+                              value={link.platform}
+                              onChange={(e) =>
+                                handleUpdateSocialLink(idx, "platform", e.target.value)
+                              }
+                              placeholder="e.g. LinkedIn, Discord, YouTube"
+                              className="w-full px-3 py-2 rounded-md border border-line bg-paper text-ink text-xs font-sans focus:outline-none focus:border-accent"
+                              required
+                            />
+                          </div>
 
-                    <div>
-                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
-                        Twitter / X URL
-                      </label>
-                      <input
-                        type="url"
-                        value={siteSettings.socials?.twitter || ""}
-                        onChange={(e) =>
-                          setSiteSettings({
-                            ...siteSettings,
-                            socials: { ...siteSettings.socials, twitter: e.target.value },
-                          })
-                        }
-                        placeholder="https://x.com/mudasar__1"
-                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
-                      />
-                    </div>
+                          <div className="w-full sm:flex-1">
+                            <label className="block text-[10px] font-mono uppercase text-muted mb-0.5 sm:hidden">
+                              Profile URL
+                            </label>
+                            <input
+                              type="url"
+                              value={link.url}
+                              onChange={(e) =>
+                                handleUpdateSocialLink(idx, "url", e.target.value)
+                              }
+                              placeholder="https://..."
+                              className="w-full px-3 py-2 rounded-md border border-line bg-paper text-ink text-xs font-mono focus:outline-none focus:border-accent"
+                              required
+                            />
+                          </div>
 
-                    <div>
-                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
-                        GitHub Profile URL
-                      </label>
-                      <input
-                        type="url"
-                        value={siteSettings.socials?.github || ""}
-                        onChange={(e) =>
-                          setSiteSettings({
-                            ...siteSettings,
-                            socials: { ...siteSettings.socials, github: e.target.value },
-                          })
-                        }
-                        placeholder="https://github.com/bhatticoder"
-                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
-                        Medium Profile URL
-                      </label>
-                      <input
-                        type="url"
-                        value={siteSettings.socials?.medium || ""}
-                        onChange={(e) =>
-                          setSiteSettings({
-                            ...siteSettings,
-                            socials: { ...siteSettings.socials, medium: e.target.value },
-                          })
-                        }
-                        placeholder="https://medium.com/@mudasarbhatti784"
-                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
-                        Reddit Profile URL
-                      </label>
-                      <input
-                        type="url"
-                        value={siteSettings.socials?.reddit || ""}
-                        onChange={(e) =>
-                          setSiteSettings({
-                            ...siteSettings,
-                            socials: { ...siteSettings.socials, reddit: e.target.value },
-                          })
-                        }
-                        placeholder="https://www.reddit.com/user/AnteaterCultural5966/"
-                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1">
-                        Instagram Profile URL
-                      </label>
-                      <input
-                        type="url"
-                        value={siteSettings.socials?.instagram || ""}
-                        onChange={(e) =>
-                          setSiteSettings({
-                            ...siteSettings,
-                            socials: { ...siteSettings.socials, instagram: e.target.value },
-                          })
-                        }
-                        placeholder="https://www.instagram.com/tita_nbyte"
-                        className="w-full px-3.5 py-2 rounded-lg border border-line bg-surface text-ink text-xs font-mono focus:outline-none focus:border-accent"
-                      />
-                    </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSocialLink(idx)}
+                            className="p-2 border border-red-200 text-red-600 rounded-md hover:bg-red-500/10 transition-colors cursor-pointer self-end sm:self-auto shrink-0"
+                            title="Delete link"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center p-6 border border-dashed border-line rounded-lg text-muted text-xs font-mono bg-surface/50">
+                        No links added yet. Click &quot;Add Social Link&quot; above to add your first profile.
+                      </div>
+                    )}
                   </div>
                 </div>
 

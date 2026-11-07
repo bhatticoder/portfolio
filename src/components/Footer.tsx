@@ -43,53 +43,21 @@ export function Footer() {
             <CopyBadge value={settings.email} label="copy" />
           </div>
 
-          {settings.socials.github && (
-            <a
-              href={settings.socials.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
-            >
-              <span>GitHub</span>
-              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </a>
-          )}
-
-          {settings.socials.linkedin && (
-            <a
-              href={settings.socials.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
-            >
-              <span>LinkedIn</span>
-              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </a>
-          )}
-
-          {settings.socials.twitter && (
-            <a
-              href={settings.socials.twitter}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
-            >
-              <span>Twitter/X</span>
-              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </a>
-          )}
-
-          {settings.socials.medium && (
-            <a
-              href={settings.socials.medium}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
-            >
-              <span>Medium</span>
-              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
-            </a>
-          )}
+          {Array.isArray(settings.socials) &&
+            settings.socials
+              .filter((soc) => soc && soc.url && soc.url.trim())
+              .map((soc) => (
+                <a
+                  key={soc.id || soc.platform}
+                  href={soc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted hover:text-ink inline-flex items-center gap-1 transition-colors"
+                >
+                  <span>{soc.platform}</span>
+                  <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.5} />
+                </a>
+              ))}
         </div>
       </div>
 

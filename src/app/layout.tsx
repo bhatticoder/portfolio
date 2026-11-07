@@ -3,6 +3,8 @@ import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { GlobalPalette } from "@/components/GlobalPalette";
+import { SiteSettingsProvider } from "@/lib/useSiteSettings";
+import { getSiteSettings } from "@/lib/settingsDb";
 import { content } from "@/data/content";
 import { config } from "@/lib/config";
 import { skills } from "@/data/skills";
@@ -55,6 +57,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const siteSettings = getSiteSettings();
   const allSkillNames = skills.flatMap((s) => s.items);
 
   const jsonLd = {
@@ -88,8 +91,10 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          {children}
-          <GlobalPalette />
+          <SiteSettingsProvider initialSettings={siteSettings}>
+            {children}
+            <GlobalPalette />
+          </SiteSettingsProvider>
         </ThemeProvider>
       </body>
     </html>

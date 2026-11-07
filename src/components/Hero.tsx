@@ -50,6 +50,7 @@ export function Hero() {
               alt={settings.name}
               fill
               priority
+              unoptimized
               sizes="192px"
               className="object-cover"
             />
@@ -146,6 +147,7 @@ export function Hero() {
               alt={settings.name}
               fill
               priority
+              unoptimized
               sizes="340px"
               className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />

@@ -4,16 +4,39 @@
   "location": "Pakistan",
   "email": "mudasarbhatti191@gmail.com",
   "calLink": "mudasar-bhatti",
-  "avatarUrl": "/profile.jpg",
+  "avatarUrl": "/uploads/1794075016631-img_0449.jpg",
   "headline": "I build AI systems that do real work for your business.",
   "subheadline": "Tools that read documents, watch video, check your code, and flag problems automatically, so your team spends time on decisions instead of repetitive checking.",
-  "socials": {
-    "linkedin": "https://www.linkedin.com/in/mudasarbhatti/",
-    "twitter": "https://x.com/mudasar__1",
-    "github": "https://github.com/bhatticoder",
-    "reddit": "https://www.reddit.com/user/AnteaterCultural5966/",
-    "medium": "https://medium.com/@mudasarbhatti784",
-    "instagram": "https://www.instagram.com/tita_nbyte"
-  }
+  "socials": [
+    {
+      "id": "linkedin",
+      "platform": "LinkedIn",
+      "url": "https://www.linkedin.com/in/mudasarbhatti/"
+    },
+    {
+      "id": "github",
+      "platform": "GitHub",
+      "url": "https://github.com/bhatticoder"
+    },
+    {
+      "id": "twitter",
+      "platform": "Twitter/X",
+      "url": "https://x.com/mudasar__1"
+    },
+    {
+      "id": "medium",
+      "platform": "Medium",
+      "url": "https://medium.com/@mudasarbhatti784"
+    },
+    {
+      "id": "reddit",
+      "platform": "Reddit",
+      "url": "https://www.reddit.com/user/AnteaterCultural5966/"
+    },
+    {
+      "id": "instagram",
+      "platform": "Instagram",
+      "url": "https://www.instagram.com/tita_nbyte"
+    }
+  ]
 }
-

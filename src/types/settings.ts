@@ -1,10 +1,7 @@
-export interface SiteSocials {
-  linkedin: string;
-  twitter: string;
-  github: string;
-  reddit: string;
-  medium: string;
-  instagram: string;
+export interface SocialLink {
+  id: string;
+  platform: string;
+  url: string;
 }
 
 export interface SiteSettings {
@@ -16,7 +13,7 @@ export interface SiteSettings {
   avatarUrl: string;
   headline: string;
   subheadline: string;
-  socials: SiteSocials;
+  socials: SocialLink[];
 }
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -29,13 +26,36 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   headline: "I build AI systems that do real work for your business.",
   subheadline:
     "Tools that read documents, watch video, check your code, and flag problems automatically, so your team spends time on decisions instead of repetitive checking.",
-  socials: {
-    linkedin: "https://www.linkedin.com/in/mudasarbhatti/",
-    twitter: "https://x.com/mudasar__1",
-    github: "https://github.com/bhatticoder",
-    reddit: "https://www.reddit.com/user/AnteaterCultural5966/",
-    medium: "https://medium.com/@mudasarbhatti784",
-    instagram: "https://www.instagram.com/tita_nbyte",
-  },
+  socials: [
+    {
+      id: "linkedin",
+      platform: "LinkedIn",
+      url: "https://www.linkedin.com/in/mudasarbhatti/",
+    },
+    {
+      id: "github",
+      platform: "GitHub",
+      url: "https://github.com/bhatticoder",
+    },
+    {
+      id: "twitter",
+      platform: "Twitter/X",
+      url: "https://x.com/mudasar__1",
+    },
+    {
+      id: "medium",
+      platform: "Medium",
+      url: "https://medium.com/@mudasarbhatti784",
+    },
+    {
+      id: "reddit",
+      platform: "Reddit",
+      url: "https://www.reddit.com/user/AnteaterCultural5966/",
+    },
+    {
+      id: "instagram",
+      platform: "Instagram",
+      url: "https://www.instagram.com/tita_nbyte",
+    },
+  ],
 };
-
