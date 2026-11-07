@@ -21,13 +21,20 @@ export async function PUT(request: NextRequest) {
   }
   try {
     const payload = await request.json();
-    const success = saveSiteSettings(payload);
-    if (success) {
-      return NextResponse.json({ ok: true, settings: getSiteSettings() });
+    const result = await saveSiteSettings(payload);
+    if (result.success) {
+      return NextResponse.json({
+        ok: true,
+        settings: getSiteSettings(),
+        mode: result.mode,
+        message: result.message,
+      });
     }
-    return NextResponse.json({ error: "Failed to save settings" }, { status: 500 });
+    return NextResponse.json(
+      { error: result.message || "Failed to save settings" },
+      { status: 500 }
+    );
   } catch (err) {
     return NextResponse.json({ error: "Bad request: " + String(err) }, { status: 400 });
   }
 }
-

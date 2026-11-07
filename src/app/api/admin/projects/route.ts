@@ -36,15 +36,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const success = createProject(body);
-    if (!success) {
+    const result = await createProject(body);
+    if (!result.success) {
       return NextResponse.json(
-        { error: "Project with this ID already exists or failed to save" },
+        { error: result.message || "Failed to create project" },
         { status: 409 }
       );
     }
 
-    return NextResponse.json({ success: true, project: body });
+    return NextResponse.json({
+      success: true,
+      project: body,
+      mode: result.mode,
+      message: result.message,
+    });
   } catch (err) {
     return NextResponse.json(
       { error: "Failed to parse or create project", details: String(err) },
@@ -68,15 +73,19 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const success = updateProject(id, data);
-    if (!success) {
+    const result = await updateProject(id, data);
+    if (!result.success) {
       return NextResponse.json(
-        { error: "Project not found or failed to update" },
+        { error: result.message || "Project not found or failed to update" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      mode: result.mode,
+      message: result.message,
+    });
   } catch (err) {
     return NextResponse.json(
       { error: "Failed to update project", details: String(err) },
@@ -100,15 +109,19 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const success = deleteProject(id);
-    if (!success) {
+    const result = await deleteProject(id);
+    if (!result.success) {
       return NextResponse.json(
-        { error: "Project not found or could not be deleted" },
+        { error: result.message || "Project not found or could not be deleted" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      mode: result.mode,
+      message: result.message,
+    });
   } catch (err) {
     return NextResponse.json(
       { error: "Failed to delete project", details: String(err) },
@@ -116,4 +129,3 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
-

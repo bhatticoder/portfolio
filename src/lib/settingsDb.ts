@@ -1,10 +1,7 @@
-import fs from "fs";
-import path from "path";
 import { SiteSettings, SocialLink, DEFAULT_SETTINGS } from "../types/settings";
+import { readDataFile, writeDataFile, StorageWriteResult } from "./storage";
 
 export * from "../types/settings";
-
-const SETTINGS_PATH = path.join(process.cwd(), "src", "data", "settings.json");
 
 export function normalizeSocials(rawSocials: unknown): SocialLink[] {
   if (Array.isArray(rawSocials)) {
@@ -49,15 +46,11 @@ export function normalizeSocials(rawSocials: unknown): SocialLink[] {
 
 export function getSiteSettings(): SiteSettings {
   try {
-    if (!fs.existsSync(SETTINGS_PATH)) {
-      return DEFAULT_SETTINGS;
-    }
-    const data = fs.readFileSync(SETTINGS_PATH, "utf-8");
-    const parsed = JSON.parse(data);
+    const raw = readDataFile<SiteSettings>("settings.json", DEFAULT_SETTINGS);
     return {
       ...DEFAULT_SETTINGS,
-      ...parsed,
-      socials: normalizeSocials(parsed.socials),
+      ...raw,
+      socials: normalizeSocials(raw.socials),
     };
   } catch (err) {
     console.error("Error reading settings DB:", err);
@@ -65,7 +58,7 @@ export function getSiteSettings(): SiteSettings {
   }
 }
 
-export function saveSiteSettings(newSettings: Partial<SiteSettings>): boolean {
+export async function saveSiteSettings(newSettings: Partial<SiteSettings>): Promise<StorageWriteResult> {
   try {
     const current = getSiteSettings();
     const merged: SiteSettings = {
@@ -75,10 +68,13 @@ export function saveSiteSettings(newSettings: Partial<SiteSettings>): boolean {
         ? normalizeSocials(newSettings.socials)
         : current.socials,
     };
-    fs.writeFileSync(SETTINGS_PATH, JSON.stringify(merged, null, 2), "utf-8");
-    return true;
+    return await writeDataFile("settings.json", merged);
   } catch (err) {
     console.error("Error writing settings DB:", err);
-    return false;
+    return {
+      success: false,
+      mode: "local",
+      message: "Error writing settings: " + String(err),
+    };
   }
 }

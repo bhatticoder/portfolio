@@ -26,15 +26,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const success = setAdminPassword(newPassword);
-    if (!success) {
+    const result = await setAdminPassword(newPassword);
+    if (!result.success) {
       return NextResponse.json(
-        { error: "Failed to save new password" },
+        { error: result.message || "Failed to save new password" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      mode: result.mode,
+      message: result.message,
+    });
   } catch (err) {
     return NextResponse.json(
       { error: "Bad request: " + String(err) },
@@ -42,4 +46,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

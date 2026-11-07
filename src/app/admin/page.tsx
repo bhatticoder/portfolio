@@ -540,6 +540,9 @@ export default function AdminPage() {
                   )}
                 </button>
               </div>
+              <p className="mt-1.5 text-xs text-muted font-mono">
+                Default: Mudasar@2312 (or bhatti2026)
+              </p>
             </div>
 
             {authError && (
@@ -1523,6 +1526,27 @@ export default function AdminPage() {
               Set a custom administrative password or PIN for this dashboard. This password will be required for all future admin sessions.
             </p>
 
+            {/* Cloud Storage & Persistence Advisory Card */}
+            <div className="mt-6 p-4 rounded-xl border border-line bg-paper/60 text-xs font-sans text-muted space-y-2">
+              <div className="font-mono text-xs uppercase tracking-wider text-accent font-semibold flex items-center gap-1.5">
+                <KeyRound className="w-4 h-4" />
+                <span>Multi-Tier Storage & Vercel Persistence</span>
+              </div>
+              <p className="leading-relaxed">
+                When deployed on Vercel, passwords and CMS updates are stored across serverless memory and temporary storage.
+              </p>
+              <div className="pt-2 border-t border-line/60 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
+                <div className="p-2.5 rounded-lg bg-surface border border-line">
+                  <span className="text-ink font-semibold block mb-0.5">Option 1: Vercel Env Var</span>
+                  Set <code className="text-accent">ADMIN_SECRET</code> in Vercel Project Settings → Environment Variables.
+                </div>
+                <div className="p-2.5 rounded-lg bg-surface border border-line">
+                  <span className="text-ink font-semibold block mb-0.5">Option 2: Git CMS Sync</span>
+                  Add <code className="text-accent">GITHUB_TOKEN</code> in Vercel to auto-commit all CMS edits directly to your repository.
+                </div>
+              </div>
+            </div>
+
             <form onSubmit={handleChangePassword} className="mt-8 space-y-5 font-sans">
               <div>
                 <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
@@ -1533,7 +1557,7 @@ export default function AdminPage() {
                     type={showCurrentPassword ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="Enter current password (default: bhatti2026)"
+                    placeholder="Enter current password (e.g. Mudasar@2312 or bhatti2026)"
                     className="w-full pl-3.5 pr-11 py-2.5 rounded-lg border border-line bg-paper text-ink text-sm font-mono focus:outline-none focus:border-accent"
                     required
                   />
