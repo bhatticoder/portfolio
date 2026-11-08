@@ -1,10 +1,248 @@
 [
   {
+    "id": "archerstem",
+    "title": "ArcherSTEM",
+    "subtitle": "Educational publishing & interactive STEM learning ecosystem",
+    "tag": "WordPress · LMS & eCommerce · Publishing",
+    "featured": true,
+    "image": null,
+    "plain": {
+      "problem": "Delivering modern STEM, coding, and financial literacy curricula across print workbooks and instant digital downloads is complex for educational publishers.",
+      "built": "Architected and deployed ArcherSTEM on WordPress with a custom digital eBook portal, fillable PDF downloads, curriculum alignment standards, and automated checkout.",
+      "outcome": "A high-retention educational publishing platform serving students, adult learners, and school districts with instant digital asset access."
+    },
+    "engineer": {
+      "problem": "Managing heavy digital PDF distribution, student workbook licensing, standards-compliant taxonomy (Jump$tart & CEE benchmarks), and secure payment processing on a content-heavy CMS.",
+      "how": [
+        "Configured WordPress infrastructure with WooCommerce digital licensing and automated watermarked PDF fulfillment.",
+        "Engineered a responsive student workbook resource portal with interactive exercise downloads and QR-linked companion solutions.",
+        "Implemented structured schema markup (EducationalWork & Product) for optimal search discovery across educational institutions.",
+        "Configured server-side caching (LiteSpeed) and WebP image optimization to maintain sub-second page loads."
+      ],
+      "tradeoffs": [
+        ["Custom WordPress CMS over headless LMS", "Far faster authoring workflow for curriculum writers, in exchange for monolithic backend coupling"],
+        ["Server-side caching over dynamic client rendering", "Significantly reduced server TTFB for search visitors, requiring cache purging on book updates"]
+      ],
+      "stack": ["WordPress", "WooCommerce", "PHP 8.2", "MySQL", "LiteSpeed Cache", "Tailwind CSS", "Stripe API"],
+      "metricsKey": "archerstem",
+      "diagram": {
+        "ariaLabel": "ArcherSTEM architecture: student visitor, WordPress LMS engine, WooCommerce digital checkout, secure download vault, and curriculum delivery portal.",
+        "nodes": [
+          { "id": "vis", "label": "Learners & Schools", "sub": "interactive portal", "x": 30, "y": 80, "w": 180 },
+          { "id": "cms", "label": "WordPress LMS", "sub": "curriculum & workbooks", "x": 260, "y": 80, "w": 180 },
+          { "id": "sec", "label": "WooCommerce Engine", "sub": "instant digital licensing", "x": 490, "y": 20, "w": 180 },
+          { "id": "vault", "label": "Secure Asset Vault", "sub": "watermarked PDF delivery", "x": 490, "y": 140, "w": 180 }
+        ],
+        "edges": [
+          { "from": "vis", "to": "cms", "label": "browse" },
+          { "from": "cms", "to": "sec", "label": "checkout" },
+          { "from": "sec", "to": "vault", "label": "fulfill" }
+        ]
+      }
+    },
+    "links": {
+      "github": null,
+      "demo": "https://archerstem.com/",
+      "writeup": null
+    }
+  },
+  {
+    "id": "sciencequick",
+    "title": "ScienceQuick",
+    "subtitle": "Evidence-based health, nutrition & holistic science publication",
+    "tag": "WordPress · Digital Media · High-Speed Publishing",
+    "featured": true,
+    "image": "https://sciencequick.com/wp-content/uploads/2025/03/Untitled-design.png",
+    "plain": {
+      "problem": "Complex medical and biological research (metabolism, cellular aging, nutrition) is often locked behind academic jargon and sluggish, ad-bloated media sites.",
+      "built": "Built and deployed ScienceQuick as a lightning-fast digital publication on WordPress that translates clinical research into accessible, evidence-backed guides.",
+      "outcome": "A clean, high-performance science magazine delivering actionable health knowledge with instant page loads."
+    },
+    "engineer": {
+      "problem": "Maximizing organic search ranking and mobile reader retention for scientific journalism requiring fast typography rendering, extensive categorization, and high Core Web Vitals scores.",
+      "how": [
+        "Engineered a minimalist, typography-first WordPress theme optimized for mobile readability and zero layout shifts (CLS < 0.01).",
+        "Configured Redis object caching and edge CDN caching on Cloudflare for 98% static asset hit ratio.",
+        "Implemented MedicalWebPage and Article JSON-LD schema for Google scientific search snippets.",
+        "Automated WebP media conversion pipelines reducing payload weight by 68%."
+      ],
+      "tradeoffs": [
+        ["Static edge caching over dynamic recommendation widgets", "Maximized mobile load speeds at the expense of individualized content personalization"],
+        ["Lightweight custom theme over multi-purpose page builders", "Cleaner DOM tree and higher PageSpeed scores, requiring code updates for layout revisions"]
+      ],
+      "stack": ["WordPress", "PHP 8.2", "Redis Caching", "Cloudflare CDN", "REST API", "SEO Schema JSON-LD"],
+      "metricsKey": "sciencequick",
+      "diagram": {
+        "ariaLabel": "ScienceQuick architecture: mobile reader, Cloudflare Edge CDN, Redis Object Cache, WordPress publishing engine, and SEO structured output.",
+        "nodes": [
+          { "id": "rdr", "label": "Mobile Readers", "sub": "organic search traffic", "x": 30, "y": 80, "w": 180 },
+          { "id": "cdn", "label": "Cloudflare Edge", "sub": "global caching & SSL", "x": 260, "y": 80, "w": 180 },
+          { "id": "wp", "label": "WordPress Engine", "sub": "PHP 8.2 & Redis cache", "x": 490, "y": 80, "w": 180 }
+        ],
+        "edges": [
+          { "from": "rdr", "to": "cdn", "label": "request" },
+          { "from": "cdn", "to": "wp", "label": "cache miss" }
+        ]
+      }
+    },
+    "links": {
+      "github": null,
+      "demo": "https://sciencequick.com/",
+      "writeup": null
+    }
+  },
+  {
+    "id": "annalsofcuriosity",
+    "title": "Annals of Curiosity",
+    "subtitle": "Scholarly peer-reviewed medical journals & research education platform",
+    "tag": "WordPress · Academic Journal · Scholarly CMS",
+    "featured": true,
+    "image": "https://annalsofcuriosity.com/wp-content/uploads/2026/04/file.jpg",
+    "plain": {
+      "problem": "Medical and epidemiological research teams need an official publishing platform for peer-reviewed studies and clinical courses without prohibitive institutional journal fees.",
+      "built": "Architected a dedicated academic journal platform on WordPress hosting two peer-reviewed publications, clinical research training modules, and an open scientific monograph repository.",
+      "outcome": "An open-access scholarly publishing hub empowering medical researchers and clinicians to publish and learn."
+    },
+    "engineer": {
+      "problem": "Supporting strict scholarly publishing protocols (peer review lifecycle, issue/volume archiving, citation metadata, and editorial workflows) without expensive proprietary journal software.",
+      "how": [
+        "Constructed custom post types and taxonomies for journal volumes, issues, authors, and citation indices across ACE and ACSC journals.",
+        "Implemented Dublin Core and Google Scholar meta tag generators for direct academic indexing.",
+        "Integrated a structured research methodology course portal with student enrollment and material downloads.",
+        "Hardened WordPress security headers and configured automated database backups for research data integrity."
+      ],
+      "tradeoffs": [
+        ["WordPress custom taxonomy over Open Journal Systems (OJS)", "Unmatched UI design freedom and mobile accessibility, requiring custom bibliographic metadata formatting"],
+        ["Open-access repository over paywalled access", "Direct global clinician impact, traded for institutional subscription revenue models"]
+      ],
+      "stack": ["WordPress", "Custom Post Types", "PHP", "MySQL", "Dublin Core", "Google Scholar Metadata", "Nginx"],
+      "metricsKey": "annalsofcuriosity",
+      "diagram": {
+        "ariaLabel": "Annals of Curiosity architecture: researchers and authors, editorial desk, custom taxonomy engine, peer-review archive, and academic search indexing.",
+        "nodes": [
+          { "id": "auth", "label": "Authors & Clinicians", "sub": "manuscript submission", "x": 30, "y": 80, "w": 180 },
+          { "id": "desk", "label": "Editorial Desk", "sub": "peer review workflow", "x": 260, "y": 80, "w": 180 },
+          { "id": "arch", "label": "Journal Archive", "sub": "ACE & ACSC issues", "x": 490, "y": 20, "w": 180 },
+          { "id": "meta", "label": "Scholar Indexing", "sub": "Dublin Core & DOI", "x": 490, "y": 140, "w": 180 }
+        ],
+        "edges": [
+          { "from": "auth", "to": "desk", "label": "submit" },
+          { "from": "desk", "to": "arch", "label": "publish" },
+          { "from": "arch", "to": "meta", "label": "index" }
+        ]
+      }
+    },
+    "links": {
+      "github": null,
+      "demo": "https://annalsofcuriosity.com/",
+      "writeup": null
+    }
+  },
+  {
+    "id": "automated-fifa-commentary",
+    "title": "Automated FIFA Commentary Engine",
+    "subtitle": "Real-time AI football commentary with Computer Vision, NLP & TTS",
+    "tag": "Computer Vision · YOLOv8 · GPT-4o · TTS",
+    "featured": true,
+    "image": "https://raw.githubusercontent.com/bhatticoder/Automated-Fifa-Commentary/main/assets/banner.png",
+    "plain": {
+      "problem": "Generating live, engaging play-by-play commentary for match footage currently requires human commentators, making amateur, simulated, or replay games silent or repetitive.",
+      "built": "An end-to-end AI pipeline that watches football match video, tracks players and the ball, classifies 13 match events, and generates professional broadcast audio commentary with synchronized speech.",
+      "outcome": "Broadcast-quality play-by-play commentary synthesized and synced directly into match video automatically."
+    },
+    "engineer": {
+      "problem": "Extracting match context from dense video, tracking multiple players and the ball simultaneously, and producing coherent commentary with human broadcaster pacing and tone.",
+      "how": [
+        "Frame-by-frame analysis using YOLOv8 for player (person) and ball (sports_ball) localization.",
+        "ByteTrack-based multi-object tracking to assign persistent IDs across frames with occlusion handling.",
+        "GPT-4o-mini Vision classifies 13 match events (goals, passes, tackles, fouls, shots, celebrations) with confidence scoring.",
+        "Event aggregation handles batching, cooldowns (7s on goals), and noise suppression.",
+        "GPT commentary engine uses a specialized sports broadcast prompt pacing narration at ~2.2 words/second.",
+        "OpenAI TTS-1 synthesizes lifelike speech audio, composited into the final video via MoviePy."
+      ],
+      "tradeoffs": [
+        ["Sampling every 90th frame over continuous inference", "Dramatically reduced compute cost and latency with negligible loss in event detection"],
+        ["ByteTrack over deep appearance re-ID", "Faster real-time tracking performance on CPU/modest GPU without heavyweight feature extraction"]
+      ],
+      "stack": ["Python", "YOLOv8", "ByteTrack", "OpenCV", "GPT-4o-mini Vision", "OpenAI TTS", "MoviePy", "PyTorch"],
+      "metricsKey": "fifa",
+      "diagram": {
+        "ariaLabel": "FIFA Commentary Pipeline: video input, YOLOv8 detection, ByteTrack tracking, GPT-4o Vision event classifier, GPT commentary generator, OpenAI TTS, and final video compositor.",
+        "nodes": [
+          { "id": "inp", "label": "Match Video", "sub": "MP4/AVI input", "x": 20, "y": 80, "w": 160 },
+          { "id": "det", "label": "YOLOv8 + ByteTrack", "sub": "player/ball tracking", "x": 210, "y": 80, "w": 170 },
+          { "id": "cls", "label": "GPT-4o Vision", "sub": "event classification", "x": 410, "y": 30, "w": 170 },
+          { "id": "nlp", "label": "GPT Broadcaster", "sub": "commentary generation", "x": 410, "y": 140, "w": 170 },
+          { "id": "tts", "label": "OpenAI TTS + MoviePy", "sub": "speech sync & export", "x": 610, "y": 80, "w": 180 }
+        ],
+        "edges": [
+          { "from": "inp", "to": "det" },
+          { "from": "det", "to": "cls" },
+          { "from": "cls", "to": "nlp" },
+          { "from": "nlp", "to": "tts" }
+        ]
+      }
+    },
+    "links": {
+      "github": "https://github.com/bhatticoder/Automated-Fifa-Commentary",
+      "demo": "https://automated-fifa-commentary.vercel.app",
+      "writeup": null
+    }
+  },
+  {
+    "id": "3d-scanner-project",
+    "title": "3D Scanner & Image-to-3D Generator",
+    "subtitle": "Open-source local image-to-3D pipeline with hardware turntable integration",
+    "tag": "Computer Vision · 3D AI · TripoSR · PyQt6",
+    "featured": true,
+    "image": null,
+    "plain": {
+      "problem": "Creating textured 3D digital models from physical items normally requires expensive photogrammetry rigs or costly cloud subscriptions with recurring usage fees.",
+      "built": "Developed a 100% local, open-source 3D generation system that takes images and outputs Blender-ready studio models in seconds with Arduino turntable hardware support.",
+      "outcome": "Drop an image, get fully textured 3D models (GLB, OBJ, STL, FBX, .blend) locally on your own machine with zero cloud costs."
+    },
+    "engineer": {
+      "problem": "Delivering fast, high-fidelity single-image 3D mesh reconstruction locally on consumer GPUs while automating hardware turntable scanning.",
+      "how": [
+        "Integrates TripoSR neural reconstruction model locally (runs on 4GB+ VRAM or CPU fallback).",
+        "Builds a PyQt6 desktop control interface interfacing with Arduino stepper motors for 360-degree turntable capture.",
+        "Automates multi-format mesh export: GLB, OBJ, STL (3D printing), FBX, and native .blend files.",
+        "Generates studio-lit Blender scenes with automated camera positioning, lighting, and PBR material setup."
+      ],
+      "tradeoffs": [
+        ["Local TripoSR over cloud APIs", "Zero operating costs and total privacy, requiring minimum 4GB local GPU for 5-second inference"],
+        ["Arduino serial control over custom hardware PCB", "Accessible to any maker and hobbyist with off-the-shelf components"]
+      ],
+      "stack": ["Python", "PyTorch", "TripoSR", "PyQt6", "OpenCV", "Blender Python API", "Arduino C++", "GLB/STL/FBX"],
+      "metricsKey": "scanner3d",
+      "diagram": {
+        "ariaLabel": "3D Scanner pipeline: camera and Arduino turntable, image intake, TripoSR neural reconstruction, mesh processing, and multi-format Blender export.",
+        "nodes": [
+          { "id": "cam", "label": "Turntable + Camera", "sub": "Arduino serial capture", "x": 30, "y": 80, "w": 180 },
+          { "id": "gui", "label": "PyQt6 Desktop App", "sub": "preview & calibration", "x": 260, "y": 80, "w": 180 },
+          { "id": "ai", "label": "TripoSR Neural Engine", "sub": "local single-image to 3D", "x": 490, "y": 20, "w": 180 },
+          { "id": "exp", "label": "Blender Studio Export", "sub": "GLB, OBJ, STL, FBX", "x": 490, "y": 140, "w": 180 }
+        ],
+        "edges": [
+          { "from": "cam", "to": "gui" },
+          { "from": "gui", "to": "ai" },
+          { "from": "ai", "to": "exp" }
+        ]
+      }
+    },
+    "links": {
+      "github": "https://github.com/bhatticoder/3D-Scanner-Project",
+      "demo": null,
+      "writeup": null
+    }
+  },
+  {
     "id": "docsentry",
     "title": "DocSentry",
     "subtitle": "Autonomous documentation-integrity agent",
     "tag": "agents · retrieval · CI",
     "featured": true,
+    "image": null,
     "plain": {
       "problem": "When software changes, the instructions that describe it quietly go out of date, and customers and new hires get confused.",
       "built": "DocSentry watches every code change, finds the documentation affected, and either reports the mismatch or proposes the fix automatically.",
@@ -49,7 +287,7 @@
       }
     },
     "links": {
-      "github": null,
+      "github": "https://github.com/bhatticoder/DocSentry",
       "demo": null,
       "writeup": null
     }
@@ -57,9 +295,10 @@
   {
     "id": "radiology-pipeline",
     "title": "Radiology & Document Pipeline",
-    "subtitle": "Consensus with a human fallback",
-    "tag": "n8n · multi-LLM · safety",
+    "subtitle": "Multi-Agent report analyzer with consensus gate and human fallback",
+    "tag": "Multi-Agent · JavaScript · Safety",
     "featured": true,
+    "image": null,
     "plain": {
       "problem": "One AI reading a medical document can be confidently wrong, and in healthcare that is not acceptable.",
       "built": "Several AI reviewers read the same document independently after private details are removed. If they disagree, a human checks it instead of the system guessing.",
@@ -68,18 +307,17 @@
     "engineer": {
       "problem": "A single LLM reading a clinical document can state something false with full confidence. In this setting, a wrong answer is worse than a slow one. The pipeline treats disagreement as a signal and routes it to a person.",
       "how": [
-        "Orchestrated in n8n so every node, branch and retry is visible and auditable.",
-        "Redacts PII/PHI before any text reaches a model.",
+        "Multi-agent architecture coordinating parallel specialized critics over medical reports.",
+        "Redacts PII/PHI before any text reaches model inference.",
         "Runs parallel specialist critique nodes over the same input to surface unsupported claims.",
-        "Computes a consensus score across models; below the strict threshold the case is routed to manual human-in-the-loop triage instead of auto-completing."
+        "Computes a consensus score across models; below strict threshold the case is routed to manual triage."
       ],
       "tradeoffs": [
         ["Redaction before inference", "Some context is lost, which can reduce model accuracy on edge cases"],
         ["Multiple critics in parallel", "Higher cost and token usage per document"],
-        ["Strict consensus threshold", "More cases land in the human queue; throughput is tuned against safety"],
-        ["n8n orchestration", "Less flexible than custom code for complex branching, in exchange for visibility"]
+        ["Strict consensus threshold", "More cases land in the human queue; throughput is tuned against safety"]
       ],
-      "stack": ["n8n", "Multi-LLM APIs", "PII/PHI redaction", "Prompt engineering", "Human-in-the-loop"],
+      "stack": ["JavaScript", "Multi-Agent LLMs", "PII/PHI redaction", "Consensus Gate", "Human-in-the-loop"],
       "metricsKey": "radiology",
       "diagram": {
         "ariaLabel": "Radiology pipeline: intake, PII/PHI redaction, three parallel specialist critics, a consensus gate that either releases a structured report or routes to human triage.",
@@ -107,7 +345,7 @@
       }
     },
     "links": {
-      "github": null,
+      "github": "https://github.com/bhatticoder/Multi-Agent-Radiology-Report-Analyzer",
       "demo": null,
       "writeup": null
     }
@@ -115,9 +353,10 @@
   {
     "id": "edge-cv-anpr",
     "title": "Real-Time Vehicle & Plate Recognition",
-    "subtitle": "ANPR and multi-object tracking",
-    "tag": "pytorch · yolov8 · latency",
+    "subtitle": "Automatic Number Plate Recognition (ANPR) and tracking",
+    "tag": "PyTorch · YOLOv8 · Computer Vision",
     "featured": true,
+    "image": null,
     "plain": {
       "problem": "Reading number plates from live video on modest hardware is slow if you process every single frame.",
       "built": "The system follows each vehicle through the video and reads its plate once, skipping frames that add nothing, then corrects typical misreads.",
@@ -128,16 +367,16 @@
       "how": [
         "YOLOv8 localizes vehicles and plates on the incoming stream.",
         "SORT / ByteTrack assigns persistent track IDs so each vehicle is read as one entity, not once per frame.",
-        "EasyOCR reads the plate crop; custom regex and character-correction post-processing fixes common confusions (for example 0/O, 1/I, 5/S) against the expected plate format.",
+        "EasyOCR reads the plate crop; custom regex and character-correction post-processing fixes common confusions against expected plate formats.",
         "Frame-skipping heuristics cap per-frame cost for latency-constrained environments."
       ],
       "tradeoffs": [
         ["Frame skipping", "Fast-moving vehicles may be sampled less often; tuned per camera"],
         ["Tracking before OCR", "Added tracker state, in exchange for OCR once per vehicle and consistent IDs"],
         ["Rule-based correction after OCR", "Rules are tied to a plate format and need per-region maintenance"],
-        ["Off-the-shelf OCR (EasyOCR)", "Lower ceiling than a plate-specific trained model, much faster to deploy"]
+        ["Off-the-shelf OCR", "Lower ceiling than a plate-specific trained model, much faster to deploy"]
       ],
-      "stack": ["PyTorch", "YOLOv8", "OpenCV", "ByteTrack / SORT", "EasyOCR", "Python"],
+      "stack": ["Python", "PyTorch", "YOLOv8", "OpenCV", "ByteTrack / SORT", "EasyOCR"],
       "metricsKey": "anpr",
       "diagram": {
         "ariaLabel": "ANPR pipeline: video stream, frame skipper, YOLOv8 detection, tracker, OCR, character correction and per-track plate output.",
@@ -161,7 +400,7 @@
       }
     },
     "links": {
-      "github": null,
+      "github": "https://github.com/bhatticoder/Automatic-Number-Plate-Recognition",
       "demo": null,
       "writeup": null
     }
@@ -170,8 +409,9 @@
     "id": "pocketdesk",
     "title": "PocketDesk",
     "subtitle": "Browser-based desktop streamer",
-    "tag": "c# · win32 · websockets",
+    "tag": "C# · Win32 · WebSockets",
     "featured": true,
+    "image": null,
     "plain": {
       "problem": "Remote access to a Windows computer normally means installing software on every device.",
       "built": "PocketDesk streams the desktop straight into a web browser, so nothing needs to be installed on the viewing side.",

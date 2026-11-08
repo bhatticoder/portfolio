@@ -129,10 +129,10 @@ export function Hero() {
           <div className="mt-10 w-full pt-8 border-t border-line grid grid-cols-3 divide-x divide-line">
             <div className="pr-4 sm:pr-6">
               <div className="font-serif text-3xl sm:text-4xl text-ink font-normal">
-                4
+                8+
               </div>
               <div className="mt-1 text-xs sm:text-sm text-muted font-sans leading-snug">
-                systems built and documented
+                systems & sites deployed
               </div>
             </div>
             <div className="px-4 sm:px-6">

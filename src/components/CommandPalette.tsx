@@ -7,6 +7,7 @@ import { Search } from "lucide-react";
 import { config } from "@/lib/config";
 import { useSiteSettings } from "@/lib/useSiteSettings";
 import { content } from "@/data/content";
+import { caseStudies } from "@/data/caseStudies";
 
 interface CommandItem {
   id: string;
@@ -145,35 +146,14 @@ export function CommandPalette({
         shortcut: "A",
         run: () => navigateTo("/admin"),
       },
-      // Case Studies
-      {
-        id: "cs-docsentry",
-        title: "DocSentry — Doc integrity agent",
-        group: "Case studies",
-        shortcut: "1",
-        run: () => selectCaseStudy("docsentry"),
-      },
-      {
-        id: "cs-radiology",
-        title: "Radiology & Document Pipeline",
-        group: "Case studies",
-        shortcut: "2",
-        run: () => selectCaseStudy("radiology-pipeline"),
-      },
-      {
-        id: "cs-anpr",
-        title: "Real-Time Vehicle & Plate Recognition",
-        group: "Case studies",
-        shortcut: "3",
-        run: () => selectCaseStudy("edge-cv-anpr"),
-      },
-      {
-        id: "cs-pocketdesk",
-        title: "PocketDesk — Browser desktop streamer",
-        group: "Case studies",
-        shortcut: "4",
-        run: () => selectCaseStudy("pocketdesk"),
-      },
+      // Case Studies & Deployed Sites
+      ...caseStudies.map((cs, idx) => ({
+        id: `cs-${cs.id}`,
+        title: `${cs.title} — ${cs.subtitle}`,
+        group: "Case studies" as const,
+        shortcut: idx < 9 ? String(idx + 1) : undefined,
+        run: () => selectCaseStudy(cs.id),
+      })),
       // Actions
       {
         id: "act-download-resume",
