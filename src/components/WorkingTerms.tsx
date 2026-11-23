@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 
 const termsAtAGlance = [
   { key: "engagement", val: "contract / freelance" },
+  { key: "pricing", val: "from $2,500 (fixed milestone or hourly)" },
   { key: "hours", val: "15–30 hrs/week" },
   { key: "timezone", val: "PKT (UTC+5), overlap with GMT and EST/PST" },
   { key: "overlap", val: "14:00–02:00 PKT" },

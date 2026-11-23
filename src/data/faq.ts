@@ -17,6 +17,10 @@ export const faq: readonly FaqItem[] = [
     a: "Yes. I sign your NDA before I see code, data or architecture documents. Case studies on this site omit client names and proprietary details for that reason.",
   },
   {
+    q: "What is your typical project price range and timeline?",
+    a: "Most focused AI automations and proof-of-concepts range from $2,500 to $6,000 with a 2 to 4 week turnaround. Production-grade multi-agent architectures or custom computer vision systems typically range from $6,000 to $15,000+ over 4 to 8 weeks. For ongoing engineering or fractional work, I contract at 15–30 hours/week. A fixed written estimate and milestone plan are provided within 24 hours of our discovery call before any code is written.",
+  },
+  {
     q: "How do I pay you?",
     a: "Invoiced in USD or GBP. I accept Wise or direct wire transfer. Invoicing is monthly for ongoing work, or per milestone for fixed-scope projects.",
   },

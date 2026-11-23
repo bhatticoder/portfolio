@@ -1,0 +1,40 @@
+# Mudassar Bhatti — AI Systems & Automation Engineer
+
+> Independent AI Systems & Automation Engineer specializing in production-grade LLM pipelines, autonomous agents, and real-time computer vision.
+
+Mudassar Bhatti (bhatti.dev) builds robust, latency-constrained AI systems for businesses, tech startups, and engineering teams across the US, UK, and Europe. Available for contract and fractional engineering (15–30 hours/week) with full overlap during UK (GMT) and US (EST/PST) business hours.
+
+## Core Capabilities & Services
+- **Autonomous Agents & Document AI:** Multi-model consensus pipelines, structured data extraction, OCR verification, and self-healing developer tooling with deterministic human-in-the-loop fallback.
+- **Computer Vision & Edge Inference:** Real-time object detection (YOLOv8), Automatic Number Plate Recognition (ANPR), and video processing pipelines optimized for sub-second, low-latency execution on standard CPU and edge hardware.
+- **Production Full-Stack AI Systems:** FastAPI microservices, n8n workflow automations, vector database retrieval (ChromaDB), local LLM inference (Ollama, vLLM), and responsive Next.js frontend interfaces.
+
+## Featured Projects & Evidence
+- [ArcherSTEM](https://archerstem.com/): Educational publishing and interactive STEM learning platform with automated digital licensing and structured educational taxonomy.
+- [Automated FIFA Commentary Engine](https://automated-fifa-commentary.vercel.app): Multimodal commentary system driven by YOLOv8 visual tracking, GPT-4o analysis, and low-latency text-to-speech. (Code: https://github.com/bhatticoder/Automated-Fifa-Commentary)
+- [DocSentry](https://github.com/bhatticoder/DocSentry): Autonomous CI agent that verifies synchronization between codebase PR diffs and technical documentation.
+- [Multi-Agent Radiology Pipeline](https://github.com/bhatticoder/Multi-Agent-Radiology-Report-Analyzer): Local-first medical report analysis architecture with strict PII/PHI redaction gating.
+- [Real-Time Edge CV & ANPR](https://github.com/bhatticoder/Automatic-Number-Plate-Recognition): 45 FPS vehicle detection and license plate OCR running on commodity hardware.
+- [ScienceQuick](https://sciencequick.com/): High-performance digital science and medical research publication with sub-second page loads.
+- [3D Scanner Project](https://github.com/bhatticoder/3D-Scanner-Project): Desktop 3D reconstruction and image-to-3D pipeline utilizing TripoSR and PyQt6.
+
+## Typical Pricing & Engagement Terms
+- **Focused Automations & POCs:** $2,500 – $6,000 (typical 2–4 week turnaround).
+- **Multi-Agent Systems & Vision Pipelines:** $6,000 – $15,000+ (typical 4–8 week turnaround).
+- **Contract / Fractional AI Engineer:** 15–30 hours/week on a monthly retainer.
+- **Invoicing & Payments:** Invoiced in USD or GBP via Wise or direct bank wire transfer.
+- **Written Estimate:** A transparent scope, timeline, and fixed price quote is provided within 1 business day following a discovery call.
+
+## Working Terms & Standards
+- **Working Hours:** 14:00–02:00 PKT (covers full UK GMT and US EST/PST business days).
+- **Confidentiality:** Mutual NDAs signed before reviewing proprietary code, data, or architecture.
+- **Code Ownership:** 100% intellectual property rights assigned to the client upon milestone payment.
+- **Evaluation & Reliability:** Every pipeline is built with confidence gating, error rate evaluations on real customer data, and fail-safe human fallback.
+
+## Official Links & Contact
+- **Website:** https://bhatti.dev (Vercel mirror: https://bhatti-dev.vercel.app)
+- **Book a Discovery Call (30 mins):** https://bhatti.dev/book (or https://cal.com/mudasar-bhatti)
+- **GitHub:** https://github.com/bhatticoder
+- **LinkedIn:** https://www.linkedin.com/in/mudasarbhatti/
+- **X / Twitter:** https://x.com/mudasar__1
+- **Email:** mudasarbhatti191@gmail.com

@@ -60,16 +60,75 @@ export default function RootLayout({
   const siteSettings = getSiteSettings();
   const allSkillNames = skills.flatMap((s) => s.items);
 
+  const socialProfiles = [
+    config.github,
+    config.linkedin,
+    config.twitter,
+    config.medium,
+  ].filter(Boolean);
+
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "Person",
-    name: content.name,
-    jobTitle: content.role,
-    url: config.siteUrl,
-    knowsAbout: allSkillNames,
-    ...(process.env.NEXT_PUBLIC_GITHUB
-      ? { sameAs: [process.env.NEXT_PUBLIC_GITHUB] }
-      : {}),
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": `${config.siteUrl}/#person`,
+        name: content.name,
+        jobTitle: content.role,
+        url: config.siteUrl,
+        image: `${config.siteUrl}/profile.png`,
+        sameAs: socialProfiles,
+        knowsAbout: allSkillNames,
+      },
+      {
+        "@type": "ProfessionalService",
+        "@id": `${config.siteUrl}/#service`,
+        name: `${content.name} — AI Systems & Automation`,
+        alternateName: ["bhatti.dev", "Mudassar Bhatti AI"],
+        url: config.siteUrl,
+        logo: `${config.siteUrl}/profile.png`,
+        image: `${config.siteUrl}/profile.png`,
+        founder: { "@id": `${config.siteUrl}/#person` },
+        description:
+          "Bespoke AI systems, autonomous document pipelines, computer vision, and workflow automation for businesses and engineering teams.",
+        priceRange: "$$ - $$$",
+        areaServed: ["Worldwide", "US", "GB", "EU"],
+        sameAs: socialProfiles,
+        hasOfferCatalog: {
+          "@type": "OfferCatalog",
+          name: "AI Engineering & Automation Services",
+          itemListElement: [
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Service",
+                name: "Document AI & Autonomous Agent Workflows",
+                description:
+                  "Multi-model consensus pipelines, document extraction, and self-healing developer agents with human-in-the-loop fallback.",
+              },
+            },
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Service",
+                name: "Real-Time Computer Vision & Edge Systems",
+                description:
+                  "YOLOv8 object detection, ANPR / license plate recognition, and video analytics running at low latency on edge/CPU hardware.",
+              },
+            },
+            {
+              "@type": "Offer",
+              itemOffered: {
+                "@type": "Service",
+                name: "Full-Stack AI Application Development",
+                description:
+                  "FastAPI microservices, Next.js interfaces, and n8n backend integrations built for 24/7 reliability.",
+              },
+            },
+          ],
+        },
+      },
+    ],
   };
 
   return (
