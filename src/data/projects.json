@@ -97,7 +97,7 @@
     "subtitle": "Scholarly peer-reviewed medical journals & research education platform",
     "tag": "WordPress · Academic Journal · Scholarly CMS",
     "featured": true,
-    "image": "https://annalsofcuriosity.com/wp-content/uploads/2026/04/file.jpg",
+    "image": "/images/annals-of-curiosity.png",
     "plain": {
       "problem": "Medical and epidemiological research teams need an official publishing platform for peer-reviewed studies and clinical courses without prohibitive institutional journal fees.",
       "built": "Architected a dedicated academic journal platform on WordPress hosting two peer-reviewed publications, clinical research training modules, and an open scientific monograph repository.",
@@ -186,6 +186,7 @@
     "links": {
       "github": "https://github.com/bhatticoder/Automated-Fifa-Commentary",
       "demo": "https://automated-fifa-commentary.vercel.app",
+      "video": "/videos/fifa-commentary.mp4",
       "writeup": null
     }
   },

@@ -124,8 +124,18 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
           </div>
         </div>
 
-        {/* Project Screenshot / Thumbnail Banner */}
-        {project.image && (
+        {/* Project Video Demo Player or Screenshot Banner */}
+        {project.links.video ? (
+          <div className="my-8 rounded-2xl overflow-hidden border border-line bg-black shadow-md aspect-video relative">
+            <video
+              src={project.links.video}
+              controls
+              playsInline
+              preload="metadata"
+              className="w-full h-full object-contain"
+            />
+          </div>
+        ) : project.image ? (
           <div className="my-8 rounded-2xl overflow-hidden border border-line bg-surface shadow-xs aspect-[16/9] relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -134,7 +144,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
               className="w-full h-full object-cover"
             />
           </div>
-        )}
+        ) : null}
 
         {/* 1. Plain English Executive Summary */}
         <section className="my-10 p-6 sm:p-8 bg-surface border border-line rounded-2xl shadow-xs space-y-6">

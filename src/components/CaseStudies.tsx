@@ -420,6 +420,18 @@ export function CaseStudies({
                 </button>
               </div>
 
+              {/* Video Walkthrough (if available) */}
+              {detailStudy.links.video && (
+                <div className="mt-6 rounded-xl overflow-hidden border border-line bg-black aspect-video relative shadow-xs">
+                  <video
+                    src={detailStudy.links.video}
+                    controls
+                    playsInline
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              )}
+
               {/* The Constraint / Problem */}
               <div className="mt-6">
                 <h4 className="font-mono text-xs uppercase tracking-wider text-muted mb-2">

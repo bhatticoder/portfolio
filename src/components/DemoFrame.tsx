@@ -13,6 +13,14 @@ interface DemoItem {
 
 const demos: readonly DemoItem[] = [
   {
+    id: "fifa",
+    label: "fifa / realtime-commentary",
+    title: "Automated FIFA Commentary",
+    description:
+      "Real-time ball & player tracking (YOLOv8) with GPT-4o Vision event classification and synchronized broadcast audio commentary.",
+    videoSrc: "/videos/fifa-commentary.mp4",
+  },
+  {
     id: "docsentry",
     label: "docsentry / dashboard",
     title: "DocSentry",
@@ -30,12 +38,6 @@ const demos: readonly DemoItem[] = [
     label: "anpr / stream-inference",
     title: "ANPR",
     description: "Detection, tracking IDs and plate reads on a live stream.",
-  },
-  {
-    id: "pocketdesk",
-    label: "pocketdesk / browser-client",
-    title: "PocketDesk",
-    description: "A Windows desktop in a browser tab, nothing installed.",
   },
 ];
 
@@ -61,20 +63,34 @@ export function DemoFrame() {
                   </span>
                 </div>
                 <span className="font-mono text-[11px] text-muted">
-                  00:00 / --:--
+                  {demo.videoSrc ? (
+                    <span className="text-accent font-medium">Ready · Video</span>
+                  ) : (
+                    "00:00 / --:--"
+                  )}
                 </span>
               </div>
 
               {/* Body (16:9 aspect-video) */}
-              <div className="relative aspect-video bg-zinc-900/5 dark:bg-zinc-100/5 flex flex-col items-center justify-center p-4">
+              <div className="relative aspect-video bg-zinc-900/5 dark:bg-zinc-100/5 flex flex-col items-center justify-center p-0 overflow-hidden">
                 {isPlaying && demo.videoSrc ? (
-                  <iframe
-                    src={demo.videoSrc}
-                    title={demo.title}
-                    loading="lazy"
-                    allowFullScreen
-                    className="w-full h-full border-0"
-                  />
+                  demo.videoSrc.endsWith(".mp4") ? (
+                    <video
+                      src={demo.videoSrc}
+                      controls
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-contain bg-black"
+                    />
+                  ) : (
+                    <iframe
+                      src={demo.videoSrc}
+                      title={demo.title}
+                      loading="lazy"
+                      allowFullScreen
+                      className="w-full h-full border-0"
+                    />
+                  )
                 ) : (
                   <button
                     type="button"
@@ -83,19 +99,35 @@ export function DemoFrame() {
                         setActiveVideoId(demo.id);
                       }
                     }}
-                    className={`flex flex-col items-center justify-center gap-2 group ${
-                      demo.videoSrc ? "cursor-pointer" : "cursor-default"
+                    className={`w-full h-full flex flex-col items-center justify-center gap-2 p-4 group transition-all ${
+                      demo.videoSrc
+                        ? "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
+                        : "cursor-default"
                     }`}
                     aria-disabled={!demo.videoSrc}
                   >
-                    <div className="w-12 h-12 rounded-full border border-line flex items-center justify-center bg-bg group-hover:border-fg transition-colors">
+                    <div
+                      className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all shadow-xs ${
+                        demo.videoSrc
+                          ? "border-accent bg-accent/10 text-accent group-hover:scale-105 group-hover:bg-accent group-hover:text-white"
+                          : "border-line bg-bg text-muted group-hover:border-fg group-hover:text-fg"
+                      }`}
+                    >
                       <Play
-                        className="w-5 h-5 ml-0.5 text-muted group-hover:text-fg transition-colors"
+                        className="w-5 h-5 ml-0.5 fill-current"
                         strokeWidth={1.5}
                       />
                     </div>
-                    <span className="font-mono text-xs text-muted">
-                      Walkthrough pending upload
+                    <span
+                      className={`font-mono text-xs ${
+                        demo.videoSrc
+                          ? "text-accent font-medium group-hover:underline"
+                          : "text-muted"
+                      }`}
+                    >
+                      {demo.videoSrc
+                        ? "Click to play commentary walkthrough"
+                        : "Walkthrough pending upload"}
                     </span>
                   </button>
                 )}
