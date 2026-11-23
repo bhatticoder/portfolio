@@ -60,25 +60,12 @@ export function Hero() {
 
         {/* Text Left Column (7 cols on lg) */}
         <div className="lg:col-span-7 flex flex-col items-start text-left">
-          {/* Availability pill & Resume Quick Download Pill */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex flex-col gap-1 items-start">
-              <AvailabilityBadge />
-              <span className="text-xs text-muted font-sans ml-1">
-                Overlaps UK and US business hours
-              </span>
-            </div>
-            <a
-              href={settings.resumeUrl || "/resume.pdf"}
-              target="_blank"
-              rel="noopener noreferrer"
-              download="Muhammad_Mudasar_Bhatti_Resume.pdf"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-accent/40 bg-accent/10 hover:bg-accent/20 text-accent text-xs font-mono transition-colors"
-              title="Download Resume (PDF)"
-            >
-              <FileDown className="w-3.5 h-3.5" />
-              <span>Resume (PDF)</span>
-            </a>
+          {/* Availability pill */}
+          <div className="flex flex-col gap-1 items-start">
+            <AvailabilityBadge />
+            <span className="text-xs text-muted font-sans ml-1">
+              Overlaps UK and US business hours
+            </span>
           </div>
 
           {/* H1 (serif, 56 to 64px desktop) */}
